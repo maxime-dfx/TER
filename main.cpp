@@ -116,6 +116,49 @@ int main()
         default :
             break;
     }
+
+
+
+    cout <<"Le test 4 concerne l'utilisation du solver"<<endl;
+    cout <<"mres vu en cours de solveur linéaire"<<endl;
+    cout <<"a partir de l'objet COO"<<endl;
+    cout << "Afficher le test 4?  y/n"<<endl;
+    cin >> rep;
+    switch (rep)
+    {
+        case 'y' :
+        {
+            cout <<"Test 4 : Utilisation du solveur mres :"<<endl;
+            cout <<"Soit la matrice A = "<<endl;
+            Matrix<double,3,3> C;
+            C << 1 , 2 , 0 , 5 , 0 , 6 , 8 , 0 , 0 ;
+            cout <<C<<endl;
+            COO Ccoo(C);
+            cout << "Et le vecteur b = "<<endl;
+            Vector3d b ;
+            b << 2 , 4 , 6 ;
+            cout << b << endl;
+            cout << "Le résulat donné par la fonction pmres de Ax = b est censé être : " << endl;
+            cout <<" 3/4 5/8 1/24"<<endl;
+
+            cout <<"En passant par la classe COO on obtient : "<<endl;
+            pmres(Ccoo,b,50);
+
+            cout <<"En effectuant le produit de A avec ce vecteur x on obtient:"<<endl;
+            Vector3d x ;
+            x << 0.288529 , 0.398742 , 0.944376;
+
+            cout << Ccoo.Prod(x) <<endl;
+
+            //Erreur dans le calcul de x a trouver pk?
+            break;
+        }
+        default :
+            break;
+
+    }
+
+   
     
     
 

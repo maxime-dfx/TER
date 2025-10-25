@@ -12,15 +12,15 @@ using namespace Eigen;
 void pmres(COO A , VectorXd b , int iter_max)
 {
     double const tol = 1E-5; 
-    VectorXd r = b , x= 0*b , w;
+    VectorXd x = 0* b;
+    VectorXd r = b , w;
 
     int k(0);
     double alpha ;
 
-    while ((r.norm()/b.norm() < tol) && (k<=iter_max))
+    while ((r.norm()/b.norm() > tol) && (k<=iter_max))
     {
         w = A.Prod(r);
-
         alpha = w.dot(r)/w.dot(w) ;
         x += alpha * r;
         r -= alpha*w ; 
