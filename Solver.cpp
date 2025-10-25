@@ -21,11 +21,13 @@ void pmres(COO A , VectorXd b , int iter_max)
     {
         w = A.Prod(r);
 
-        alpha = w.dot(r)/w.dot(w)
-        x += 
+        alpha = w.dot(r)/w.dot(w) ;
+        x += alpha * r;
+        r -= alpha*w ; 
+        k++;
 
     }
-    
+    cout << x <<endl;
 }
 
 
