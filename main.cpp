@@ -162,7 +162,7 @@ int main()
 
 
 cout <<"Test de la lecture d'un maillage : "<<endl;
-string file="carre1.mesh";
+string file="Maillage/carre1.mesh";
 maillage maill1(file);
 double maille(0.);
 maille +=1.;

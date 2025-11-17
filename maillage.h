@@ -19,6 +19,11 @@ private:
 public:
     maillage(string file_name);
     ~maillage();
+
+    //Récupere les coordonnée des noeuds du maillage
+    Matrix<double,-1,2> Get_Coord();
+    //Recupere le tableaux donnant les noeuds présents dans une maille
+    Matrix<double,-1,3> Get_Noeud();
 };
 
 
