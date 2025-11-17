@@ -8,6 +8,7 @@ using namespace std;
 
 double f_test(int i , int j);
 
+Matrix<double,3,6> Crea_B (int k);
 
 
 

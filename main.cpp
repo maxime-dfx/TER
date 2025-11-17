@@ -2,6 +2,7 @@
 #include <iostream>
 #include "z_fonctions.h"
 #include "Solver.h"
+#include "maillage.h"
 
 using namespace Eigen;
 using namespace std;
@@ -139,7 +140,7 @@ int main()
             b << 2 , 4 , 6 ;
             cout << b << endl;
             cout << "Le résulat donné par la fonction pmres de Ax = b est censé être : " << endl;
-            cout <<" 3/4 5/8 1/24"<<endl;
+            cout << 3./4<<" "<< 5./8<<" "<< 1./24<<endl;
 
             cout <<"En passant par la classe COO on obtient : "<<endl;
             pmres(Ccoo,b,50);
@@ -156,21 +157,17 @@ int main()
         default :
             break;
 
+
     }
 
+
+cout <<"Test de la lecture d'un maillage : "<<endl;
+string file="carre1.mesh";
+maillage maill1(file);
+double maille(0.);
+maille +=1.;
    
     
-    
-
-
-    
-
-    
-
-
-
-
-
 
     return 0;
 }

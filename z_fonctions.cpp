@@ -23,6 +23,15 @@ double f_test(int i , int j)
 
 
 
+//Crée B en partant du principe qu'on a lu le gmsh comme dans le tp a rendre(en fortran)
+// Matrix<double,3,6> Crea_B (int k)
+// {
+//     //Calcul de Je:
+//     Matrix2d Je;
+//     Je(0,0) = coord_noeud(noeud_maille(k,2),0);
+//     //Calcul des dNi/dx et dy:
+    
+// }
 
 
 
