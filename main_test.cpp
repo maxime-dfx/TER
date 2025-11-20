@@ -181,7 +181,10 @@ fin:
 
     Matrix<double,3,6> B = Crea_B(maill1 , 6 );
 
-    B = 2*B;
+    cout <<"Matrice B obtenue : "<<endl;
+    cout <<B<<endl;
+
+    double K_25 = mat_elem_k(2,5,maill1,6);
     
         
 

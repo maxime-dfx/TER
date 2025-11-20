@@ -64,15 +64,29 @@ Matrix<double,3,6> Crea_B (maillage maille , int k)
     mat_B<< dN1(0) , 0. , dN2(0) , 0. , dN3(0) , 0. ,
              0. , dN1(1) , 0. , dN2(1) , 0. , dN3(1),
             dN1(1) , dN1(0) , dN2(1) , dN2(0) , dN3(1) , dN3(0);
-    cout <<mat_B<<endl;
 
     return mat_B;
     }
 
-Matrix<double,6,6> Crea_D()
+Matrix<double,3,3> Crea_D()
 {
-    Matrix<double,6,6> mat_D;
+    Matrix<double,3,3> mat_D;
+    mat_D = MatrixXd::Identity(3,3);
     return mat_D;
 }
+
+double mat_elem_k(int i,int j,maillage maillage1,int k)
+{
+    Matrix<double,3,6> B = Crea_B(maillage1 , k);
+    Matrix<double,3,3> D = Crea_D();
+    double K_ij = B.col(j).transpose()*D*B.col(i);
+
+    cout <<K_ij<<endl;
+    return K_ij;
+
+}
+
+
+
     
 
