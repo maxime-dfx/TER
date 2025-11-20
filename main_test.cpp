@@ -7,6 +7,8 @@ using namespace Eigen;
 using namespace std;
 
 
+//Pour garder une trace des tests réaliser sans avoir à les faires
+//pour resoudre notre problème
 int main()
 {
     char rep;
