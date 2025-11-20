@@ -1,5 +1,4 @@
 #include "z_fonctions.h"
-#include "maillage.h"
 #include <iostream>
 #include <complex>
 #include <fstream>
@@ -45,48 +44,35 @@ Matrix<double,3,6> Crea_B (maillage maille , int k)
 
 
     //Calcul de inverse et transpose de Je
-    
-    //Calcul des dNi/dx et dy:
-    
-}
+    Je = Je.inverse().transpose();
 
 
+    //Calcul des grad(Ni):
+    Vector2d dN1_ref , dN2_ref , dN3_ref , dN1 , dN2 , dN3;
+    dN1_ref << -1.,-1.;
+    dN2_ref << 1. , 0.;
+    dN3_ref << 0. , 1.;
 
+    dN1 = Je*dN1_ref;
+    dN2 = Je*dN2_ref;
+    dN3 = Je*dN3_ref;
 
+    //Construction de B:
 
+    Matrix<double,3,6> mat_B ;
 
-// Pas besoin de regarder aussi bas
+    mat_B<< dN1(0) , 0. , dN2(0) , 0. , dN3(0) , 0. ,
+             0. , dN1(1) , 0. , dN2(1) , 0. , dN3(1),
+            dN1(1) , dN1(0) , dN2(1) , dN2(0) , dN3(1) , dN3(0);
+    cout <<mat_B<<endl;
 
-fonction::fonction() : _x(0.)
+    return mat_B;
+    }
+
+Matrix<double,6,6> Crea_D()
 {
-}
-
-fonction::~fonction()
-{
-}
-
-    
-// fonction::fonction(string file_name)
-// {
-//     ifstream fic(file_name);
-    
-//     if (!fic)
-//     {
-//         cerr << "Erreur ouvertur fichier" <<endl;
-//     }
-
-// }
-
-   
-fonction::fonction(function<double (const int , const int)> f)
-{
-    this->_f = f;
-}
-
-
-const double fonction::GetF() const
-{
-    return this->_x;
+    Matrix<double,6,6> mat_D;
+    return mat_D;
 }
     
 

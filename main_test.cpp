@@ -2,7 +2,6 @@
 #include <iostream>
 #include "z_fonctions.h"
 #include "Solver.h"
-#include "maillage.h"
 
 using namespace Eigen;
 using namespace std;
@@ -10,8 +9,20 @@ using namespace std;
 
 int main()
 {
-
     char rep;
+    cout <<"Souhaitez-vous afficher les tests un par un(y)"<<endl;
+    cout<<"(chaque test vous sera proposé un à un) ou bien"<<endl;
+    cout <<"seulement le dernier(n) : "<<endl;
+    cin>> rep;
+    switch (rep)
+    {
+    case 'n':
+        goto fin;
+        break;
+    
+    default:
+        break;
+    }
     cout << "Le test 1 concerne la création d'un objet COO"<<endl;
     cout <<"en utilisant une matrice construite"<<endl;
     cout << "Afficher le test 1?  y/n"<<endl;
@@ -161,27 +172,16 @@ int main()
     }
 
 
-cout <<"Test de la lecture d'un maillage : "<<endl;
-string file="Maillage/carre1.mesh";
-maillage maill1(file);
-double maille(0.);
-maille +=1.;
-   
+fin:
+    cout <<"Test de la lecture d'un maillage : "<<endl;
+    string file="Maillage/carre1.mesh";
+    maillage maill1(file);
+
+    Matrix<double,3,6> B = Crea_B(maill1 , 6 );
+
+    B = 2*B;
     
+        
 
-    return 0;
+        return 0;
 }
-
-
-
-double f_test(int i , int j)
-    {
-        if (abs(i-j)<=1)
-        {
-            return i+j;
-        }
-        else
-        {
-            return 0.;
-        }
-    }
