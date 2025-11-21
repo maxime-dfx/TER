@@ -12,11 +12,20 @@ using namespace std;
 COO::COO()
 {}
 
+
 COO::~COO()
 {
 }
 
-COO::COO(function<double (const int, const int)> f ,int taille_pb_1 , int taille_pb_2)
+COO::COO(VectorXi M1 , VectorXi M2 , VectorXd M3, int taille_A)
+{
+    this->_M1 = M1;
+    this->_M2 = M2;
+    this->_M3 = M3;
+    this->_taille_A = taille_A;
+}
+
+COO::COO(function<double (const int, const int)> f,int m)
 {
     //taille_pb sert à connaitre la taille hypothétique de la matrice A
     //qu'on ne veut surtout pas créer!!
@@ -30,14 +39,14 @@ COO::COO(function<double (const int, const int)> f ,int taille_pb_1 , int taille
     VectorXi M1 , M2;
     VectorXd M3;
     //cout << "Allocation matrice check"<<endl;
- 
+    this->_taille_A = m;
    
     double terme(0.);
 
 
-    for (int i = 0 ; i< taille_pb_1 ; i++)
+    for (int i = 0 ; i< n ; i++)
     {
-        for (int j = 0 ; j < taille_pb_2 ; j++)
+        for (int j = 0 ; j < n ; j++)
         {
             terme = f(i,j);
 
@@ -129,6 +138,11 @@ const VectorXd COO::Get3() const
     return this->_M3;
 }
 
+const int COO::GetSize() const
+{
+    return this->_taille_A;
+}
+
 
 VectorXd COO::Prod(VectorXd u)
 {
@@ -148,5 +162,90 @@ VectorXd COO::Prod(VectorXd u)
     
 
     return y;
+}
+
+COO COO::diagonal()
+{
+    int taille;
+    int n = this->_M1.size();
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M1(i) == this->_M2(i))
+        {
+            taille++;
+        }
+    }
+    VectorXi M1(taille) , M2(taille);
+    VectorXd M3(taille);
+    int k = 0;
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M1(i) == this->_M2(i))
+        {
+            M1(k)=this->_M1(i);
+            M2(k)=this->_M2(i);
+            M3(k) = this->_M3(i);
+            k ++;
+        }
+    } 
+    COO diag(M1,M2,M3,taille);
+    return diag;
+}
+
+COO COO::tril()
+{
+    int taille;
+    int n = this->_M1.size();
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M1(i) > this->_M2(i))
+        {
+            taille++;
+        }
+    }
+    VectorXi M1(taille) , M2(taille);
+    VectorXd M3(taille);
+    int k = 0;
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M2(i) < this->_M1(i))
+        {
+            M1(k)=this->_M1(i);
+            M2(k)=this->_M2(i);
+            M3(k) = this->_M3(i);
+            k ++;
+        }
+    } 
+    COO tril(M1,M2,M3,taille);
+    return tril;
+}
+
+
+COO COO::triu()
+{
+    int taille;
+    int n = this->_M1.size();
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M1(i) < this->_M2(i))
+        {
+            taille++;
+        }
+    }
+    VectorXi M1(taille) , M2(taille);
+    VectorXd M3(taille);
+    int k = 0;
+    for (int i = 0 ; i< n ; i++)
+    {
+        if (this->_M2(i) > this->_M1(i))
+        {
+            M1(k)=this->_M1(i);
+            M2(k)=this->_M2(i);
+            M3(k) = this->_M3(i);
+            k ++;
+        }
+    } 
+    COO triu(M1,M2,M3,taille);
+    return triu;
 }
 

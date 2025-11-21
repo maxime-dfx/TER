@@ -71,9 +71,112 @@ void pgmres(COO A, VectorXd b,int iter_max)
         x = x0 + somme de 1 a kmax de (yk*vk)*/
 
     }
+}
 
 
-
-
+void grad_conj(COO A,VectorXd b,VectorXd x0,int iter_max,double epsilon)
+{
+    VectorXd x = 0*b;
+    double norm_b = b.norm();
+    if (norm_b < 1e-30)
+    {
+        cout << "x = "<<endl<<x<<endl;
+    } 
+    x = x0;
+    VectorXd r = b - A.Prod(x);
+    int k = 0;
+    while(r.norm()/norm_b > epsilon)
+    {
+        COO J ,L , U;
+        J = A.diagonal();
+        L = A.tril();
+        U = A.triu();
+        VectorXd z = r;
+        z = solve_tri(L,z,true);
+        cout<<"z = "<<z<<endl;
+        z = J.Prod(z);
+        cout<<"z = "<<z<<endl;
+        z = solve_tri(U,z,false);
+        cout<<"z = "<<z<<endl;
+        double rho = r.dot(z);
+        double rho0 = 1 ;
+        if (abs(rho) < 1e-100)
+        {
+            cout <<"Echec rho = 0"<<endl;
+            break;
+        }
+        VectorXd p;
+        if (k==0)
+        {
+            p = z;
+        }
+        else
+        {
+            double gamma = rho/rho0;
+            p = gamma * p + z ;
+        }
+        VectorXd q = A.Prod(p);
+        double delta = p.dot(q);
+        if (delta <1e-100)
+        {
+            cout <<"Echec delta =0"<<endl;
+            break;
+        }
+        x += rho/delta * p;
+        r -= rho/delta * q;
+        rho0 = rho;
+        k ++;
+    }
+    cout <<"Fait en "<< k << " iterations"<<endl;
+    cout <<"x = " <<x<<endl;
 
 }
+
+
+//Resoud Ax = b si A est triangulaire 'strict' (diag nulle)
+VectorXd solve_tri(COO A , VectorXd b , bool lower)
+{
+    VectorXd x = 0*b;
+    double temp(0.);
+    int n = A.Get1().size();
+    int m = A.GetSize();
+    VectorXi M1 = A.Get1() , M2 = A.Get2() ;
+    VectorXd M3 = A.Get3();
+    if (lower == true)
+    {
+        for (int i = 0 ; i<m ; i++)
+        {
+            temp = 0;
+            //Produit scalaire entre ligne i de A (ici tri inf) et x
+            for (int j = 1 ; i<n ;i ++)
+            {
+                if (M1(j) == i)
+                {
+                    temp += M3(j)*x(M2(j));
+                }
+            }
+            x(i) = b(i) - temp;
+        }
+    }
+    else
+    {
+        for (int i = 0 ; i<m ; i++)
+        {
+            temp = 0;
+            //Produit scalaire entre ligne m+1-i de A (ici tri inf) et x
+            for (int j = 1 ; i<n ;i ++)
+            {
+                if (M1(j) == m+1-i)
+                {
+                    temp += M3(j)*x(M2(j));
+                }
+            }
+            x(n+1-i) = b(n+1-i) - temp;
+        }
+    }
+
+    return x;
+}
+
+
+

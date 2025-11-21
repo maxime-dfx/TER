@@ -13,14 +13,15 @@ class COO
 
     VectorXi _M1 , _M2 ;
     VectorXd _M3;
+    int _taille_A;
 
     public :
 
         // constructeur par défaut
         COO();
-
+        COO(VectorXi M1 , VectorXi M2 , VectorXd M3, int taille_A);
         //consructeur par fonction
-        COO(function<double (const int, const int)> f ,int taille_pb_1 , int taille_pb_2);
+        COO(function<double (const int, const int)> f,int n);
 
         //Ce constructeur sera peu utilisé en réalité
         // Car en principe les matrices seront trop grandes pour etre 
@@ -44,9 +45,18 @@ class COO
         // Permet de récupérer M3
         const VectorXd Get3() const;
 
+        // Permet de récupérer la taille de la matrice creuse
+        const int GetSize() const;
+
 
         //Donne le produit de la matrice en COO par u
         VectorXd Prod(VectorXd u);
+
+        COO diagonal();
+        COO triu();
+        COO tril();
+
+        VectorXd GetLine(int i);
 
 
 

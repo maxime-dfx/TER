@@ -88,7 +88,7 @@ int main()
 
         cout << "===================================================="<<endl;
         cout <<"En passant par la classe COO on obtient : "<<endl;
-        COO test2(f_test,5,5); //crée mat1 mat2 mat3 à partir de la fonction fournie
+        COO test2(f_test,5); //crée mat1 mat2 mat3 à partir de la fonction fournie
         cout<<"Création réussi de l'objet COO"<<endl;
         test2.Show();
         cout << "===================================================="<<endl;
@@ -173,18 +173,62 @@ int main()
 
     }
 
+fin :
 
-fin:
-    cout <<"Test de la lecture d'un maillage : "<<endl;
-    string file="Maillage/carre1.mesh";
-    maillage maill1(file);
+cout <<"Le test 5 concerne l'utilisation du solver"<<endl;
+cout <<"gradient conjugué "<<endl;
+cout <<"a partir de l'objet COO"<<endl;
+cout << "Afficher le test 5?  y/n"<<endl;
+cin >> rep;
+switch (rep)
+{
+    case 'y' :
+    {
+        cout <<"Test 5 : Utilisation du solveur gradient conjugué :"<<endl;
+        cout <<"Soit la matrice A = "<<endl;
+        Matrix<double,3,3> C1;
+        C1 << 1 , 2 , 0 , 5 , 0 , 6 , 8 , 0 , 0 ;
+        cout <<C1<<endl;
+        COO Ccoo(C1);
+        cout << "Et le vecteur b = "<<endl;
+        Vector3d b ;
+        b << 2 , 4 , 6 ;
+        cout << b << endl;
+        cout << "Le résulat donné par la fonction grad_conj de Ax = b est censé être : " << endl;
+        cout << 3./4<<" "<< 5./8<<" "<< 1./24<<endl;
+        Vector3d x0;
+        x0 << 1, 1,0;
+        cout <<"En passant par la classe COO on obtient : "<<endl;
+        grad_conj(Ccoo,b,x0,1000,1e-8);
 
-    Matrix<double,3,6> B = Crea_B(maill1 , 6 );
 
-    cout <<"Matrice B obtenue : "<<endl;
-    cout <<B<<endl;
+        cout <<"Il doit y avoir un problème dans solv_tri à verifier"<<endl;
+        // cout <<"En effectuant le produit de A avec ce vecteur x on obtient:"<<endl;
+        // Vector3d x ;
+        // x << 0.288529 , 0.398742 , 0.944376;
 
-    double K_25 = mat_elem_k(2,5,maill1,6);
+        // cout << Ccoo.Prod(x) <<endl;
+
+        //Erreur dans le calcul de x a trouver pk?
+        break;
+    }
+    default :
+        break;
+
+
+    }
+
+
+    // cout <<"Test de la lecture d'un maillage : "<<endl;
+    // string file="Maillage/carre1.mesh";
+    // maillage maill1(file);
+
+    // Matrix<double,3,6> B = Crea_B(maill1 , 6 );
+
+    // cout <<"Matrice B obtenue : "<<endl;
+    // cout <<B<<endl;
+
+    // double K_25 = mat_elem_k(2,5,maill1,6);
     
         
 
