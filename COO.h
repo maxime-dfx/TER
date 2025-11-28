@@ -55,10 +55,6 @@ class COO
         COO diagonal();
         COO triu();
         COO tril();
-
-        VectorXd GetLine(int i);
-
-
-
-
 };
+
+COO operator-(const COO & A , const COO & B);

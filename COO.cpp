@@ -88,7 +88,7 @@ COO::COO(MatrixXd A)
     {
         for (int j = 0 ; j < m ; j ++)
         {
-            if (A(i,j) > 1E-8)
+            if (abs(A(i,j)) > 0)
             {
                 taille ++;
             }
@@ -112,6 +112,7 @@ COO::COO(MatrixXd A)
     this->_M1 = M1;
     this->_M2 = M2;
     this->_M3 = M3;
+    this->_taille_A = n;
 
 }
 
@@ -166,7 +167,7 @@ VectorXd COO::Prod(VectorXd u)
 
 COO COO::diagonal()
 {
-    int taille;
+    int taille(0);
     int n = this->_M1.size();
     for (int i = 0 ; i< n ; i++)
     {
@@ -188,13 +189,13 @@ COO COO::diagonal()
             k ++;
         }
     } 
-    COO diag(M1,M2,M3,taille);
+    COO diag(M1,M2,M3,this->_taille_A);
     return diag;
 }
 
 COO COO::tril()
 {
-    int taille;
+    int taille(0);
     int n = this->_M1.size();
     for (int i = 0 ; i< n ; i++)
     {
@@ -216,14 +217,14 @@ COO COO::tril()
             k ++;
         }
     } 
-    COO tril(M1,M2,M3,taille);
+    COO tril(M1,M2,M3,this->_taille_A);
     return tril;
 }
 
 
 COO COO::triu()
 {
-    int taille;
+    int taille(0);
     int n = this->_M1.size();
     for (int i = 0 ; i< n ; i++)
     {
@@ -245,7 +246,66 @@ COO COO::triu()
             k ++;
         }
     } 
-    COO triu(M1,M2,M3,taille);
+    COO triu(M1,M2,M3,this->_taille_A);
     return triu;
 }
 
+
+COO operator-(const COO& A, const COO& B) 
+{
+
+    int i = 0, j = 0;
+    assert(A.GetSize() == B.GetSize());
+    VectorXi M1 , M2,A1 , A2, B1 , B2;
+    VectorXd M3 ,A3 , B3;
+    A1 = A.Get1();
+    A2 = A.Get2();
+    A3 = A.Get3();
+    B1 = B.Get1();
+    B2 = B.Get2();
+    B3 = B.Get3();
+
+    while (i < A3.size() || j < B3.size()) 
+    {
+        //cout <<"i = "<<i<<" j = "<<j<<endl;
+        if (j >= B3.size() || (i < A3.size() && make_pair(A1(i), A2(i)) < make_pair(B1(j), B2(j)))) 
+        {
+            // A uniquement
+            M1.conservativeResize(M1.size()+1);
+            M1(M1.size()-1) = A1[i];
+            M2.conservativeResize(M2.size()+1);
+            M2(M2.size()-1) = A2(i);
+            M3.conservativeResize(M3.size()+1);
+            M3(M3.size()-1) = A3(i);
+            i++;
+        }
+        else if (i >= A3.size() || (j < B3.size() && make_pair(B1[j], B2[j]) < make_pair(A1[i], A2[i]))) 
+        {
+            // B uniquement
+            M1.conservativeResize(M1.size()+1);
+            M1(M1.size()-1) = B1[j];
+            M2.conservativeResize(M2.size()+1);
+            M2(M2.size()-1) = B2(j);
+            M3.conservativeResize(M3.size()+1);
+            M3(M3.size()-1) = - B3(j);
+            j++;
+        }
+        else {
+            // même position
+            double val = A3[i] - B3[j];
+            if (val != 0.0) 
+            {
+                M1.conservativeResize(M1.size()+1);
+                M1(M1.size()-1) = A1[i];
+                M2.conservativeResize(M2.size()+1);
+                M2(M2.size()-1) = A2(i);
+                M3.conservativeResize(M3.size()+1);
+                M3(M3.size()-1) = val;
+            }
+            i++; j++;
+        }
+    }
+    COO C(M1,M2,M3,A.GetSize());
+
+    return C;
+}

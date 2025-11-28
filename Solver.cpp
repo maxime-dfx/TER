@@ -85,50 +85,63 @@ void grad_conj(COO A,VectorXd b,VectorXd x0,int iter_max,double epsilon)
     x = x0;
     VectorXd r = b - A.Prod(x);
     int k = 0;
+    COO J ,L , U;
+    J = A.diagonal();
+    L = A.tril();
+    U = A.triu();
+    VectorXd z = r;
+    VectorXd p;
+    VectorXd q;
+    double delta(0.);
+    double rho0 = 1 ;
+    double rho(0.);
+    // cout<<" "<<endl<<" "<<endl;
     while(r.norm()/norm_b > epsilon)
     {
-        COO J ,L , U;
-        J = A.diagonal();
-        L = A.tril();
-        U = A.triu();
-        VectorXd z = r;
-        z = solve_tri(L,z,true);
-        cout<<"z = "<<z<<endl;
+        // cout << "iteration : "<<k<<endl;
+        // cout<<"r = "<<r<<endl;
+        z = solve_tri(J-L,z,true);
+        // cout<<"z = "<<z<<endl;
         z = J.Prod(z);
-        cout<<"z = "<<z<<endl;
-        z = solve_tri(U,z,false);
-        cout<<"z = "<<z<<endl;
-        double rho = r.dot(z);
-        double rho0 = 1 ;
+        // cout<<"z = "<<z<<endl;
+        z = solve_tri(J-U,z,false);
+        // cout<<"z = "<<z<<endl;
+        rho = r.dot(z);
+        
         if (abs(rho) < 1e-100)
         {
             cout <<"Echec rho = 0"<<endl;
             break;
         }
-        VectorXd p;
+        
         if (k==0)
         {
             p = z;
         }
         else
         {
-            double gamma = rho/rho0;
-            p = gamma * p + z ;
+            p = (rho/rho0) * p + z ;
+            cout<<"p = "<<p<<endl;
         }
-        VectorXd q = A.Prod(p);
-        double delta = p.dot(q);
+        q = A.Prod(p);
+        delta = p.dot(q);
         if (delta <1e-100)
         {
             cout <<"Echec delta =0"<<endl;
             break;
         }
         x += rho/delta * p;
+        cout<< k<<" x = "<<x<<endl;
+        cout << "Produit Ax = " <<endl<<A.Prod(x)<<endl;
         r -= rho/delta * q;
         rho0 = rho;
         k ++;
+        // cout<<" "<<endl<<" "<<endl<<" "<<endl;
     }
     cout <<"Fait en "<< k << " iterations"<<endl;
     cout <<"x = " <<x<<endl;
+    cout << "Produit Ax = " <<endl<<A.Prod(x)<<endl;
+
 
 }
 
@@ -137,8 +150,10 @@ void grad_conj(COO A,VectorXd b,VectorXd x0,int iter_max,double epsilon)
 VectorXd solve_tri(COO A , VectorXd b , bool lower)
 {
     VectorXd x = 0*b;
+    //cout <<"b = "<<endl<<b<<endl;
     double temp(0.);
     int n = A.Get1().size();
+    //cout <<"Il y a "<<n<<" element non nul de A"<<endl;
     int m = A.GetSize();
     VectorXi M1 = A.Get1() , M2 = A.Get2() ;
     VectorXd M3 = A.Get3();
@@ -147,9 +162,11 @@ VectorXd solve_tri(COO A , VectorXd b , bool lower)
         for (int i = 0 ; i<m ; i++)
         {
             temp = 0;
+            
             //Produit scalaire entre ligne i de A (ici tri inf) et x
-            for (int j = 1 ; i<n ;i ++)
+            for (int j = 0 ; j<n ;j ++)
             {
+                // cout <<"on va jusque la"<<i<<" "<<j<<endl;
                 if (M1(j) == i)
                 {
                     temp += M3(j)*x(M2(j));
@@ -160,18 +177,21 @@ VectorXd solve_tri(COO A , VectorXd b , bool lower)
     }
     else
     {
+        cout<<"Debut solver tri sup"<<endl;
         for (int i = 0 ; i<m ; i++)
         {
             temp = 0;
-            //Produit scalaire entre ligne m+1-i de A (ici tri inf) et x
-            for (int j = 1 ; i<n ;i ++)
+            //Produit scalaire entre ligne m-i de A (ici tri sup) et x
+            for (int j = 0 ; j<n ;j ++)
             {
-                if (M1(j) == m+1-i)
+                if (M1(j) == m-i-1)
                 {
                     temp += M3(j)*x(M2(j));
                 }
             }
-            x(n+1-i) = b(n+1-i) - temp;
+            // cout <<"i = "<<i<<" temp = "<<temp<<endl;
+            x(m-i-1) = b(m-i-1) - temp;
+            // cout <<x<<endl;
         }
     }
 

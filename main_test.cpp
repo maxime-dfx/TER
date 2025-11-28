@@ -173,12 +173,40 @@ int main()
 
     }
 
+    cout <<"Test 5, soustraction de COO :"<<endl;
+    cout << "Afficher le test 5?  y/n"<<endl;
+    cin >> rep;
+    switch (rep)
+    {
+    case 'y':
+    {
+        Matrix3d A100 , A101 ,A102 , A103;
+        A100 << 1 , 0 , 0 , 0 , 1 , 0 , 0 , 2 , 1;
+        A101 << 4 , 2 , 0 , 1 , 0 , 0 , 0 , 2 , 0;
+        A102 << -3 , -2 , 0 , -1 , 1 , 0 , 0 , 0 , 0;
+        A103 << 1 , 0 , 0 , 0 , 0 , 0 , 0 , 0 , 0;
+        COO A200(A100);
+        COO A201(A101);
+        COO A202(A102);
+        COO A203(A103);
+        (A200 - A201).Show();
+        break;
+    }
+    default:
+        break;
+    }
+
+
+
 fin :
 
-cout <<"Le test 5 concerne l'utilisation du solver"<<endl;
+
+
+
+cout <<"Le test 6 concerne l'utilisation du solver"<<endl;
 cout <<"gradient conjugué "<<endl;
 cout <<"a partir de l'objet COO"<<endl;
-cout << "Afficher le test 5?  y/n"<<endl;
+cout << "Afficher le test 6?  y/n"<<endl;
 cin >> rep;
 switch (rep)
 {
@@ -187,7 +215,7 @@ switch (rep)
         cout <<"Test 5 : Utilisation du solveur gradient conjugué :"<<endl;
         cout <<"Soit la matrice A = "<<endl;
         Matrix<double,3,3> C1;
-        C1 << 1 , 2 , 0 , 5 , 0 , 6 , 8 , 0 , 0 ;
+        C1 << 1 , 2 , 0 , 2 , 1 , 6 , 0 , 6 , 1 ;
         cout <<C1<<endl;
         COO Ccoo(C1);
         cout << "Et le vecteur b = "<<endl;
@@ -195,14 +223,23 @@ switch (rep)
         b << 2 , 4 , 6 ;
         cout << b << endl;
         cout << "Le résulat donné par la fonction grad_conj de Ax = b est censé être : " << endl;
-        cout << 3./4<<" "<< 5./8<<" "<< 1./24<<endl;
+        cout << 6./39<<" "<< 1-3./39<<" "<< 18/39.<<endl;
         Vector3d x0;
-        x0 << 1, 1,0;
+        x0 << 0, 1,0.5;
         cout <<"En passant par la classe COO on obtient : "<<endl;
         grad_conj(Ccoo,b,x0,1000,1e-8);
 
 
-        cout <<"Il doit y avoir un problème dans solv_tri à verifier"<<endl;
+
+        /* Pour un x plutot proche de clui attendu on obtient un b vaguement corect
+        Mais sinon ca diverge pas mal probleme pas tres stable*/
+
+
+
+
+
+
+        
         // cout <<"En effectuant le produit de A avec ce vecteur x on obtient:"<<endl;
         // Vector3d x ;
         // x << 0.288529 , 0.398742 , 0.944376;
@@ -216,7 +253,7 @@ switch (rep)
         break;
 
 
-    }
+}
 
 
     // cout <<"Test de la lecture d'un maillage : "<<endl;
