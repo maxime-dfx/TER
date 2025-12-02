@@ -1,18 +1,42 @@
-all : test
+# --- MASTER MAKEFILE (CHEF D'ORCHESTRE) ---
 
+# Définition des dossiers
+DIR_FE = finite_elements
+DIR_IMG = traitement_image
 
-test : COO.cpp Solver.cpp maillage.cpp z_fonctions.cpp main.cpp
-	clear
-	g++ -Wall -std=c++11 -I Eigen/eigen -o run COO.cpp Solver.cpp maillage.cpp z_fonctions.cpp main_test.cpp
-	#Compilation réussi
-	./run
+# Les cibles qui ne sont pas des fichiers
+.PHONY: all clean fe img help
 
-	
-exec : COO.cpp Solver.cpp maillage.cpp z_fonctions.cpp main.cpp
-	clear
-	g++ -Wall -std=c++11 -I Eigen/eigen -o run COO.cpp Solver.cpp maillage.cpp z_fonctions.cpp main.cpp
-	#Compilation réussi
-	./run
+# 1. Commande par défaut (quand on tape juste "make")
+all: fe img
+	@echo "✅ Tout est compilé ! Les exécutables sont dans le dossier 'bin'."
 
-zip :
-	tar czvf '../TER_2A.tgz' ../'2A'
+# 2. Compiler seulement la partie Elements Finis
+fe:
+	@echo "-----------------------------------"
+	@echo "🔧 Compilation du module Elements Finis..."
+	@echo "-----------------------------------"
+	@$(MAKE) -C $(DIR_FE)
+
+# 3. Compiler seulement la partie Traitement Image
+img:
+	@echo "-----------------------------------"
+	@echo "📸 Compilation du module Traitement Image..."
+	@echo "-----------------------------------"
+	@$(MAKE) -C $(DIR_IMG)
+
+# 4. Tout nettoyer (supprimer les .o et les .exe)
+clean:
+	@echo "🧹 Nettoyage en cours..."
+	@$(MAKE) -C $(DIR_FE) clean
+	@$(MAKE) -C $(DIR_IMG) clean
+	rm -rf bin/*
+	@echo "✨ Tout est propre."
+
+# 5. Aide
+help:
+	@echo "Commandes disponibles :"
+	@echo "  make        : Compile tout le projet"
+	@echo "  make fe     : Compile uniquement le solver éléments finis"
+	@echo "  make img    : Compile uniquement le traitement d'image"
+	@echo "  make clean  : Supprime tous les fichiers temporaires et exécutables"

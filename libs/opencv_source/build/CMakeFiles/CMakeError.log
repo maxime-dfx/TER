@@ -1,0 +1,111 @@
+Determining if the _aligned_malloc exist failed with the following output:
+Change Dir: /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f17df/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_f17df.dir/build.make CMakeFiles/cmTC_f17df.dir/build
+gmake[1] : on entre dans le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+Building C object CMakeFiles/cmTC_f17df.dir/CheckSymbolExists.c.o
+/usr/bin/cc   -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Wsuggest-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wimplicit-fallthrough=3 -Wno-strict-overflow -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -fvisibility=hidden -fvisibility-inlines-hidden -Wno-implicit-const-int-float-conversion -Wno-unused-but-set-variable  -O3 -DNDEBUG  -DNDEBUG -fPIE -o CMakeFiles/cmTC_f17df.dir/CheckSymbolExists.c.o -c /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+cc1: attention: l'option de la ligne de commande « -Wnon-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsign-promo » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsuggest-override » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wno-delete-non-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -fvisibility-inlines-hidden » est valable pour C++/ObjC++ mais pas pour C
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c: Dans la fonction « main »:
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: erreur: « _aligned_malloc » non déclaré (première utilisation dans cette fonction)
+    8 |   return ((int*)(&_aligned_malloc))[argc];
+      |                   ^~~~~~~~~~~~~~~
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: chaque identificateur non déclaré est rapporté une seule fois pour chaque fonction dans laquelle il apparaît
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:4:14: attention: le paramètre « argc » est défini mais pas utilisé [-Wunused-but-set-parameter]
+    4 | int main(int argc, char** argv)
+      |          ~~~~^~~~
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c: Au plus haut niveau:
+cc1: note: l'option de la ligne de commande non reconnue « -Wno-implicit-const-int-float-conversion » aurait pu avoir pour but de supprimer les diagnostiques précédents
+cc1: note: l'option de la ligne de commande non reconnue « -Wno-unnamed-type-template-args » aurait pu avoir pour but de supprimer les diagnostiques précédents
+gmake[1]: *** [CMakeFiles/cmTC_f17df.dir/build.make:78 : CMakeFiles/cmTC_f17df.dir/CheckSymbolExists.c.o] Erreur 1
+gmake[1] : on quitte le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+gmake: *** [Makefile:127 : cmTC_f17df/fast] Erreur 2
+
+
+File /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <malloc.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef _aligned_malloc
+  return ((int*)(&_aligned_malloc))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+Determining if the include file /usr/include/libpng/png.h exists failed with the following output:
+Change Dir: /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1ce90/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1ce90.dir/build.make CMakeFiles/cmTC_1ce90.dir/build
+gmake[1] : on entre dans le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+Building C object CMakeFiles/cmTC_1ce90.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Wsuggest-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wimplicit-fallthrough=3 -Wno-strict-overflow -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -fvisibility=hidden -fvisibility-inlines-hidden  -O3 -DNDEBUG  -DNDEBUG -fPIE -o CMakeFiles/cmTC_1ce90.dir/CheckIncludeFile.c.o -c /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+cc1: attention: l'option de la ligne de commande « -Wnon-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsign-promo » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsuggest-override » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wno-delete-non-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -fvisibility-inlines-hidden » est valable pour C++/ObjC++ mais pas pour C
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c:1:10: erreur fatale: /usr/include/libpng/png.h : Aucun fichier ou dossier de ce type
+    1 | #include </usr/include/libpng/png.h>
+      |          ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+compilation terminée.
+gmake[1]: *** [CMakeFiles/cmTC_1ce90.dir/build.make:78 : CMakeFiles/cmTC_1ce90.dir/CheckIncludeFile.c.o] Erreur 1
+gmake[1] : on quitte le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+gmake: *** [Makefile:127 : cmTC_1ce90/fast] Erreur 2
+
+
+
+Determining if the function sgemm_ exists failed with the following output:
+Change Dir: /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e3b9b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e3b9b.dir/build.make CMakeFiles/cmTC_e3b9b.dir/build
+gmake[1] : on entre dans le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+Building C object CMakeFiles/cmTC_e3b9b.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Wsuggest-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wimplicit-fallthrough=3 -Wno-strict-overflow -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -fvisibility=hidden -fvisibility-inlines-hidden -DCHECK_FUNCTION_EXISTS=sgemm_ -O3 -DNDEBUG  -DNDEBUG -fPIE -o CMakeFiles/cmTC_e3b9b.dir/CheckFunctionExists.c.o -c /usr/share/cmake/Modules/CheckFunctionExists.c
+cc1: attention: l'option de la ligne de commande « -Wnon-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsign-promo » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsuggest-override » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wno-delete-non-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -fvisibility-inlines-hidden » est valable pour C++/ObjC++ mais pas pour C
+cc1: note: l'option de la ligne de commande non reconnue « -Wno-unnamed-type-template-args » aurait pu avoir pour but de supprimer les diagnostiques précédents
+Linking C executable cmTC_e3b9b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e3b9b.dir/link.txt --verbose=1
+/usr/bin/cc    -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Wsuggest-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wimplicit-fallthrough=3 -Wno-strict-overflow -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -fvisibility=hidden -fvisibility-inlines-hidden -DCHECK_FUNCTION_EXISTS=sgemm_ -O3 -DNDEBUG  -DNDEBUG   -Wl,--gc-sections -Wl,--as-needed -Wl,--no-undefined  CMakeFiles/cmTC_e3b9b.dir/CheckFunctionExists.c.o -o cmTC_e3b9b 
+/usr/bin/ld : CMakeFiles/cmTC_e3b9b.dir/CheckFunctionExists.c.o : dans la fonction « main » :
+CheckFunctionExists.c:(.text.startup.main+0xc) : référence indéfinie vers « sgemm_ »
+collect2: erreur: ld a retourné le statut de sortie 1
+gmake[1]: *** [CMakeFiles/cmTC_e3b9b.dir/build.make:99 : cmTC_e3b9b] Erreur 1
+gmake[1] : on quitte le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+gmake: *** [Makefile:127 : cmTC_e3b9b/fast] Erreur 2
+
+
+
+Determining if the include file sys/videoio.h exists failed with the following output:
+Change Dir: /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_23b0a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_23b0a.dir/build.make CMakeFiles/cmTC_23b0a.dir/build
+gmake[1] : on entre dans le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+Building C object CMakeFiles/cmTC_23b0a.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -fsigned-char -W -Wall -Wreturn-type -Wnon-virtual-dtor -Waddress -Wsequence-point -Wformat -Wformat-security -Wmissing-declarations -Wmissing-prototypes -Wstrict-prototypes -Wundef -Winit-self -Wpointer-arith -Wshadow -Wsign-promo -Wuninitialized -Wsuggest-override -Wno-delete-non-virtual-dtor -Wno-unnamed-type-template-args -Wno-comment -Wimplicit-fallthrough=3 -Wno-strict-overflow -fdiagnostics-show-option -Wno-long-long -pthread -fomit-frame-pointer -ffunction-sections -fdata-sections  -msse -msse2 -msse3 -fvisibility=hidden -fvisibility-inlines-hidden  -O3 -DNDEBUG  -DNDEBUG -fPIE -o CMakeFiles/cmTC_23b0a.dir/CheckIncludeFile.c.o -c /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+cc1: attention: l'option de la ligne de commande « -Wnon-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsign-promo » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wsuggest-override » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -Wno-delete-non-virtual-dtor » est valable pour C++/ObjC++ mais pas pour C
+cc1: attention: l'option de la ligne de commande « -fvisibility-inlines-hidden » est valable pour C++/ObjC++ mais pas pour C
+/net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c:1:10: erreur fatale: sys/videoio.h : Aucun fichier ou dossier de ce type
+    1 | #include <sys/videoio.h>
+      |          ^~~~~~~~~~~~~~~
+compilation terminée.
+gmake[1]: *** [CMakeFiles/cmTC_23b0a.dir/build.make:78 : CMakeFiles/cmTC_23b0a.dir/CheckIncludeFile.c.o] Erreur 1
+gmake[1] : on quitte le répertoire « /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/CMakeFiles/CMakeTmp »
+gmake: *** [Makefile:127 : cmTC_23b0a/fast] Erreur 2
+
+
+
