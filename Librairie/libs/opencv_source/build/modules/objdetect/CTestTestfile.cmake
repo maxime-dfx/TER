@@ -1,0 +1,6 @@
+# CMake generated Testfile for 
+# Source directory: /net/netud/m/mdefaux/TER2A/libs/opencv_source/modules/objdetect
+# Build directory: /net/netud/m/mdefaux/TER2A/libs/opencv_source/build/modules/objdetect
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
