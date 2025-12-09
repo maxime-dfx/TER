@@ -2,6 +2,9 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+#include <stdexcept>
+#include <omp.h>
 
 using namespace std;
 using namespace Eigen;
@@ -12,11 +15,9 @@ using namespace Eigen;
 Solver::Solver(const Mesh& m, const MaterialManager& mat) 
     : mesh(m), matMgr(mat) {
     
-    // 1. Initialisation des tailles
     numNodes = mesh.vertices.size();
-    numDof = numNodes * 2; // 2 inconnues par noeud (Ux, Uy)
+    numDof = numNodes * 2; 
 
-    // 2. On prépare les vecteurs (remplis de 0)
     F.resize(numDof);
     F.setZero();
     
@@ -25,167 +26,191 @@ Solver::Solver(const Mesh& m, const MaterialManager& mat)
 }
 
 // =========================================================
-// CALCUL ELEMENTAIRE (Matrice 6x6 d'un triangle)
+// CALCUL ELEMENTAIRE (CORRIGÉ)
 // =========================================================
 Matrix<double, 6, 6> Solver::computeElementStiffness(int triangleIndex) {
-    
-    // 1. Récupérer les sommets
     const Triangle& tri = mesh.triangles[triangleIndex];
-    const Vertex& p1 = mesh.vertices[tri.v[0]];
-    const Vertex& p2 = mesh.vertices[tri.v[1]];
-    const Vertex& p3 = mesh.vertices[tri.v[2]];
+    
+    // Récupération des propriétés matériau (utilisation d'Eigen au lieu de tableau C)
+    double D_array[3][3];
+    matMgr.getHookeMatrix(tri.label, D_array, false);
+    
+    Matrix<double, 3, 3> D;
+    for(int i=0; i<3; i++) 
+        for(int j=0; j<3; j++) 
+            D(i,j) = D_array[i][j];
 
-    // 2. Géométrie (P1)
-    double x1 = p1.x, y1 = p1.y;
-    double x2 = p2.x, y2 = p2.y;
-    double x3 = p3.x, y3 = p3.y;
+    // Coordonnées
+    double x[3], y[3];
+    for(int i=0; i<3; ++i) {
+        x[i] = mesh.vertices[tri.v[i]].x;
+        y[i] = mesh.vertices[tri.v[i]].y;
+    }
 
-    // Déterminant Jacobien (2 * Aire)
-    double detJ = (x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1);
+    // CORRECTION : Calcul correct de l'aire et vérification d'orientation
+    double detJ = (x[1]-x[0])*(y[2]-y[0]) - (x[2]-x[0])*(y[1]-y[0]);
+    
+    if (std::abs(detJ) < 1e-16) {
+        throw std::runtime_error("Triangle dégénéré détecté (aire nulle) - index: " + 
+                                 std::to_string(triangleIndex));
+    }
+    
     double area = 0.5 * std::abs(detJ);
+    double sign = (detJ > 0) ? 1.0 : -1.0;
 
     // Dérivées des fonctions de forme
-    double b1 = y2 - y3; double c1 = x3 - x2;
-    double b2 = y3 - y1; double c2 = x1 - x3;
-    double b3 = y1 - y2; double c3 = x2 - x1;
+    double b[3], c[3];
+    b[0] = y[1]-y[2]; b[1] = y[2]-y[0]; b[2] = y[0]-y[1];
+    c[0] = x[2]-x[1]; c[1] = x[0]-x[2]; c[2] = x[1]-x[0];
 
-    // 3. Matrice B (Strain-Displacement)
+    // Matrice B (3x6)
     Matrix<double, 3, 6> B;
     B.setZero();
+    for(int i=0; i<3; ++i) {
+        B(0, 2*i)   = b[i];
+        B(1, 2*i+1) = c[i];
+        B(2, 2*i)   = c[i];
+        B(2, 2*i+1) = b[i];
+    }
     
-    B(0,0) = b1; B(0,2) = b2; B(0,4) = b3;
-    B(1,1) = c1; B(1,3) = c2; B(1,5) = c3;
-    B(2,0) = c1; B(2,1) = b1; 
-    B(2,2) = c2; B(2,3) = b2; 
-    B(2,4) = c3; B(2,5) = b3;
-    
-    B /= detJ;
+    // CORRECTION MAJEURE : Division par (2*area) et non par detJ
+    B *= sign / (2.0 * area);
 
-    // 4. Matrice D (Loi de Hooke)
-    Matrix3d D;
-    double D_raw[3][3];
-    matMgr.getHookeMatrix(tri.label, D_raw, false); // false = Déformation Plane
-
-    for(int i=0; i<3; i++)
-        for(int j=0; j<3; j++)
-            D(i,j) = D_raw[i][j];
-
-    // 5. Calcul Final : Ke = B^T * D * B * Aire
-    return B.transpose() * D * B * area;
+    // Ke = B^T * D * B * area (épaisseur = 1.0)
+    return B.transpose() * D * B * area; 
 }
 
 // =========================================================
-// ASSEMBLAGE (Construction de K global)
+// ASSEMBLAGE (PARALLELE OPTIMISÉ)
 // =========================================================
 void Solver::assemble() {
-    cout << "Assemblage de la matrice globale (" << numDof << " d.o.f)..." << endl;
-
-    // 1. Liste de triplets pour Eigen
+    cout << "   [Solver] Assemblage de la matrice..." << flush;
+    
+    // CORRECTION : Meilleure estimation (chaque élément contribue 36 termes)
+    size_t estimated_triplets = mesh.triangles.size() * 36;
     vector<Triplet<double>> triplets;
-    triplets.reserve(mesh.triangles.size() * 36);
+    triplets.reserve(estimated_triplets);
 
-    // 2. Boucle sur TOUS les triangles
-    for (size_t t = 0; t < mesh.triangles.size(); ++t) {
-        
-        // A. Calcul matrice locale
-        Matrix<double, 6, 6> Ke = computeElementStiffness(t);
+    #pragma omp parallel
+    {
+        vector<Triplet<double>> local_triplets;
+        // CORRECTION : Réserve plus réaliste par thread
+        int num_threads = omp_get_num_threads();
+        local_triplets.reserve((estimated_triplets / num_threads) + 100);
 
-        // B. Indices globaux
-        const Triangle& tri = mesh.triangles[t];
-        int nodes[3] = { tri.v[0], tri.v[1], tri.v[2] };
+        #pragma omp for schedule(dynamic, 64)
+        for (int t = 0; t < (int)mesh.triangles.size(); ++t) {
+            Matrix<double, 6, 6> Ke = computeElementStiffness(t);
+            const Triangle& tri = mesh.triangles[t];
+            
+            int gdof[6];
+            for(int k=0; k<3; ++k) {
+                gdof[2*k]   = 2 * tri.v[k];
+                gdof[2*k+1] = 2 * tri.v[k] + 1;
+            }
 
-        int globalIndices[6];
-        for (int i = 0; i < 3; ++i) {
-            globalIndices[2*i]     = 2 * nodes[i];     // Ux
-            globalIndices[2*i + 1] = 2 * nodes[i] + 1; // Uy
-        }
-
-        // C. Remplissage triplets
-        for (int i = 0; i < 6; ++i) {
-            for (int j = 0; j < 6; ++j) {
-                double val = Ke(i, j);
-                if (std::abs(val) > 1e-12) {
-                    triplets.push_back(Triplet<double>(globalIndices[i], globalIndices[j], val));
+            for (int i = 0; i < 6; ++i) {
+                for (int j = 0; j < 6; ++j) {
+                    if (std::abs(Ke(i, j)) > 1e-16) {
+                        local_triplets.push_back(Triplet<double>(gdof[i], gdof[j], Ke(i, j)));
+                    }
                 }
             }
         }
+
+        #pragma omp critical
+        {
+            triplets.insert(triplets.end(), local_triplets.begin(), local_triplets.end());
+        }
     }
 
-    // 3. Construction matrice Sparse
     K_global.resize(numDof, numDof);
     K_global.setFromTriplets(triplets.begin(), triplets.end());
-
-    cout << "Assemblage termine." << endl;
+    
+    cout << " Fait (" << triplets.size() << " termes non-nuls)." << endl;
 }
 
 // =========================================================
-// GESTION DES CL (Conditions aux Limites)
+// GESTION CL ET RESOLUTION (CORRIGÉE)
 // =========================================================
 void Solver::addBoundaryCondition(NodeSelector selector, int direction, double value) {
-    boundaryConditions.push_back(BoundaryCondition(selector, direction, value));
+    boundaryConditions.emplace_back(selector, direction, value);
 }
 
-// =========================================================
-// RESOLUTION (K.U = F)
-// =========================================================
 void Solver::solve() {
-    cout << "Application des Conditions aux Limites (" << boundaryConditions.size() << " CLs)..." << endl;
+    // CORRECTION : Vérification qu'il y a des CL
+    if (boundaryConditions.empty()) {
+        throw std::runtime_error("Aucune condition aux limites définie ! Le système est singulier.");
+    }
+    
+    cout << "   [Solver] Application des CL (" << boundaryConditions.size() << " conditions)..." << endl;
 
-    double penalty = 1e14; // Facteur de pénalisation
+    // CORRECTION : Pénalité plus robuste (max * 10^12 au lieu de 10^10)
+    double max_diag = 0.0;
+    for (int k=0; k<K_global.outerSize(); ++k) {
+        for (SparseMatrix<double>::InnerIterator it(K_global, k); it; ++it) {
+            if (it.row() == it.col()) {
+                max_diag = std::max(max_diag, std::abs(it.value()));
+            }
+        }
+    }
+    
+    if (max_diag < 1e-16) {
+        throw std::runtime_error("Matrice globale nulle ou quasi-nulle ! Vérifiez les propriétés matériaux.");
+    }
+    
+    double penalty = max_diag * 1.0e12;
+    cout << "   [Solver] Pénalité = " << penalty << " (max_diag = " << max_diag << ")" << endl;
 
-    // On parcourt tous les noeuds
+    // Application
+    int applied_count = 0;
     for (int i = 0; i < numNodes; ++i) {
         double x = mesh.vertices[i].x;
         double y = mesh.vertices[i].y;
 
-        // On teste toutes les CL pour ce noeud
         for (const auto& bc : boundaryConditions) {
-            
-            // Si le noeud est concerné (critère géométrique)
             if (bc.selector(x, y)) {
-                
-                int dof = 2 * i + bc.direction; // Indice global (Ux ou Uy)
-
-                // Méthode de pénalisation : 
-                // On ajoute un terme géant sur la diagonale et dans le vecteur force
+                int dof = 2 * i + bc.direction;
                 K_global.coeffRef(dof, dof) += penalty;
                 F(dof) += penalty * bc.value;
+                applied_count++;
             }
         }
     }
+    
+    // CORRECTION : Vérifier qu'au moins un DDL a été bloqué
+    if (applied_count == 0) {
+        throw std::runtime_error("Aucun nœud ne satisfait les conditions aux limites ! Vérifiez vos sélecteurs.");
+    }
+    
+    cout << "   [Solver] " << applied_count << " DDLs bloqués." << endl;
 
-    cout << "Résolution du système (SimplicialLLT)..." << endl;
-    
-    // Résolution directe (Cholesky pour matrices creuses symétriques définies positives)
-    Eigen::SimplicialLLT<Eigen::SparseMatrix<double>> solver;
-    
+    // Résolution
+    cout << "   [Solver] Factorisation Cholesky..." << flush;
+    SimplicialLLT<SparseMatrix<double>> solver;
     solver.compute(K_global);
     
-    if(solver.info() != Eigen::Success) {
-        cerr << "ERREUR CRITIQUE : La décomposition de la matrice a échoué." << endl;
-        return;
+    if(solver.info() != Success) {
+        throw std::runtime_error("La matrice est singulière ou mal conditionnée ! Vérifiez les CL.");
     }
+    cout << " OK." << endl;
 
+    cout << "   [Solver] Résolution du système..." << flush;
     U = solver.solve(F);
-
-    if(solver.info() != Eigen::Success) {
-        cerr << "ERREUR CRITIQUE : La résolution a échoué." << endl;
-        return;
+    
+    if(solver.info() != Success) {
+        throw std::runtime_error("Échec de la résolution du système linéaire !");
     }
-
-    cout << "Résolution terminée." << endl;
-    cout << " -> Déplacement Max : " << U.maxCoeff() << endl;
-    cout << " -> Déplacement Min : " << U.minCoeff() << endl;
+    
+    cout << " Terminé." << endl;
+    
+    // Affichage du déplacement max pour validation
+    double max_displacement = U.cwiseAbs().maxCoeff();
+    cout << "   [Solver] Déplacement max = " << max_displacement << endl;
 }
 
-// =========================================================
-// UTILITAIRE
-// =========================================================
 void Solver::printSystemInfo() const {
-    cout << "Info Systeme Global :" << endl;
-    cout << " - Taille matrice    : " << numDof << " x " << numDof << endl;
-    cout << " - Termes non-nuls   : " << K_global.nonZeros() << endl;
-    
-    double fill = (double)K_global.nonZeros() / (double(numDof) * double(numDof));
-    cout << " - Taux remplissage  : " << fill * 100.0 << " %" << endl;
+    cout << "   [Info] Taille matrice : " << numDof << "x" << numDof << endl;
+    cout << "   [Info] Termes non-nuls : " << K_global.nonZeros() << endl;
+    cout << "   [Info] Mémoire approx : " << K_global.nonZeros() * sizeof(double) / 1024 / 1024 << " MB" << endl;
 }

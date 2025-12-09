@@ -3,9 +3,10 @@
 
 #include "Mesh.h"
 #include "Material.h"
-#include "BoundaryCondition.h" // <--- NOUVEAU
+#include "BoundaryCondition.h"
 
 #include <vector>
+#include <string>
 #include <Eigen/Dense>
 #include <Eigen/Sparse>
 
@@ -14,6 +15,7 @@ private:
     const Mesh& mesh;
     const MaterialManager& matMgr;
 
+    // Système linéaire K*U = F
     Eigen::SparseMatrix<double> K_global;
     Eigen::VectorXd F;
     Eigen::VectorXd U;
@@ -21,25 +23,28 @@ private:
     int numNodes;
     int numDof;
 
-    // Liste des conditions aux limites stockées
-    std::vector<BoundaryCondition> boundaryConditions; // <--- NOUVEAU
+    // Stockage des Conditions aux Limites
+    std::vector<BoundaryCondition> boundaryConditions;
 
 public:
     Solver(const Mesh& m, const MaterialManager& mat);
 
+    // Calcul de la matrice de raideur locale (6x6)
     Eigen::Matrix<double, 6, 6> computeElementStiffness(int triangleIndex);
+
+    // Assemblage global (Parallélisé OpenMP)
     void assemble();
 
-    // --- NOUVEAU ---
-    // Ajoute une CL à la liste
+    // Ajout d'une condition aux limites (ex: bloquer x sur le bord gauche)
     void addBoundaryCondition(NodeSelector selector, int direction, double value);
 
-    // La fonction solve ne prend plus d'argument, elle utilise la liste interne
+    // Résolution du système (avec pénalisation adaptative)
     void solve(); 
 
+    // Affichage des infos techniques sur la matrice
     void printSystemInfo() const;
     
-    // Getter pour récupérer le résultat U
+    // Récupération des résultats
     const Eigen::VectorXd& getSolution() const { return U; }
 };
 

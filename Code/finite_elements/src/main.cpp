@@ -1,170 +1,193 @@
+/**
+ * ============================================================================
+ * MAIN.CPP - SIMULATION FEM COMPOSITE (ANIMATION MULTI-FICHIERS)
+ * ============================================================================
+ */
+
 #include <iostream>
 #include <iomanip>
 #include <vector>
 #include <cmath>
 #include <limits>
 #include <string>
-#include <algorithm> // Pour std::max
+#include <algorithm>
+#include <fstream> 
+#include <locale>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-// Tes headers
+// Headers personnels
 #include "Mesh.h"
 #include "Material.h"
 #include "Solver.h"
 
 using namespace std;
 
+// Fonction utilitaire pour créer un dossier (portable)
+bool createDirectory(const string& path) {
+#ifdef _WIN32
+    return _mkdir(path.c_str()) == 0 || errno == EEXIST;
+#else
+    return mkdir(path.c_str(), 0755) == 0 || errno == EEXIST;
+#endif
+}
+
 int main(int argc, char** argv) {
+    setlocale(LC_NUMERIC, "C");
+
     cout << "========================================" << endl;
     cout << "   SIMULATION FEM COMPOSITE (TER)       " << endl;
-    cout << "   Traction Uniaxiale 2D (Plane Strain) " << endl;
     cout << "========================================" << endl;
 
-    // Gestion du fichier en argument ou par défaut
     string meshFile = (argc > 1) ? argv[1] : "data/maillage/maillage_17216.mesh";
 
     try {
-        // -------------------------------------------------
-        // ETAPE 1 : MAILLAGE & GEOMETRIE
-        // -------------------------------------------------
+        // [1] MAILLAGE
         cout << "\n[1] Chargement du Maillage..." << endl;
-        
         Mesh mesh;
         mesh.read(meshFile);
-        mesh.printStats();
-
-        // Calcul de la Bounding Box pour identifier les bords
+        
+        if(mesh.vertices.empty() || mesh.triangles.empty()) {
+            throw runtime_error("Maillage vide ou invalide!");
+        }
+        
+        // Calcul des bornes
         double xmin = numeric_limits<double>::max();
         double xmax = numeric_limits<double>::lowest();
         double ymin = numeric_limits<double>::max();
         double ymax = numeric_limits<double>::lowest();
-
+        
         for (const auto& v : mesh.vertices) {
-            if (v.x < xmin) xmin = v.x;
-            if (v.x > xmax) xmax = v.x;
-            if (v.y < ymin) ymin = v.y;
-            if (v.y > ymax) ymax = v.y;
+            xmin = min(xmin, v.x);
+            xmax = max(xmax, v.x);
+            ymin = min(ymin, v.y);
+            ymax = max(ymax, v.y);
         }
         
         double L = xmax - xmin;
-        double H = ymax - ymin;
         
-        cout << "    -> Dimensions Geometrie : [" << L << " x " << H << "]" << endl;
-        cout << "    -> X range : [" << xmin << ", " << xmax << "]" << endl;
-        cout << "    -> Y range : [" << ymin << ", " << ymax << "]" << endl;
+        if(L < 1e-10) {
+            throw runtime_error("Dimension du maillage invalide (L ≈ 0)");
+        }
+        
+        cout << "   Dimensions: [" << xmin << ", " << xmax << "] x [" 
+             << ymin << ", " << ymax << "]" << endl;
+        cout << "   Longueur caractéristique L = " << L << endl;
 
-
-        // -------------------------------------------------
-        // ETAPE 2 : MATERIAUX
-        // -------------------------------------------------
-        cout << "\n[2] Configuration des Matériaux..." << endl;
-
+        // [2] MATERIAUX
+        cout << "\n[2] Propriétés matériaux..." << endl;
         MaterialManager matMgr;
-        
-        // --- DEFINITION DES PROPRIETES ---
-        // Label 101 = Matrice (ex: Epoxy)
-        // Label 102 = Fibres  (ex: Carbone)
-        // Unités : MPa (N/mm^2)
-        
-        double E_mat = 3500.0;   double nu_mat = 0.35;
-        double E_fib = 230000.0; double nu_fib = 0.20;
+        matMgr.addMaterial(101, 3500.0, 0.35);    // Matrice
+        matMgr.addMaterial(102, 230000.0, 0.20);  // Fibre
 
-        matMgr.addMaterial(101, E_mat, nu_mat);
-        matMgr.addMaterial(102, E_fib, nu_fib);
-        
-        cout << "    -> Matrice (101) : E=" << E_mat << ", nu=" << nu_mat << endl;
-        cout << "    -> Fibres  (102) : E=" << E_fib << ", nu=" << nu_fib << endl;
-
-
-        // -------------------------------------------------
-        // ETAPE 3 : INITIALISATION & ASSEMBLAGE
-        // -------------------------------------------------
-        cout << "\n[3] Initialisation du Solveur..." << endl;
-        
-        if (mesh.triangles.empty()) throw runtime_error("Maillage vide !");
-        
+        // [3] ASSEMBLAGE
+        cout << "\n[3] Assemblage..." << endl;
         Solver solver(mesh, matMgr);
-
-        // Lancement de l'assemblage de la matrice K
         solver.assemble();
-        
-        // Vérification technique
         solver.printSystemInfo();
 
+        // [4] CONDITIONS AUX LIMITES
+        cout << "\n[4] Conditions aux Limites..." << endl;
+        double u_imposed = L * 0.01; 
+        double eps_geom = L * 0.0001;
 
-        // -------------------------------------------------
-        // ETAPE 4 : CONDITIONS AUX LIMITES (CL)
-        // -------------------------------------------------
-        cout << "\n[4] Definition des Conditions aux Limites..." << endl;
+        cout << "   - Bord gauche (x=" << xmin << "): Ux = 0" << endl;
+        cout << "   - Coin bas-gauche: Uy = 0" << endl;
+        cout << "   - Bord droit (x=" << xmax << "): Ux = " << u_imposed << endl;
 
-        // Paramètres de l'essai de traction
-        double epsilon_target = 0.01; // 1% de déformation
-        double u_imposed = L * epsilon_target;
-        double eps_geom = L * 0.0001; // Tolérance pour attraper les noeuds sur les bords
-
-        // A. Encastrement Glissant à GAUCHE (x = xmin) -> Ux = 0
-        // On utilise une expression Lambda [...] pour capturer les variables
         solver.addBoundaryCondition(
             [xmin, eps_geom](double x, double y) { 
                 return std::abs(x - xmin) < eps_geom; 
-            }, 
-            0,   // Direction X (0)
-            0.0  // Valeur 0
+            }, 0, 0.0
         );
-
-        // B. Point Pivot Coin BAS-GAUCHE (x = xmin, y = ymin) -> Uy = 0
-        // Empêche le mouvement de corps rigide en Y
+        
         solver.addBoundaryCondition(
             [xmin, ymin, eps_geom](double x, double y) { 
-                return std::abs(x - xmin) < eps_geom && std::abs(y - ymin) < eps_geom; 
-            }, 
-            1,   // Direction Y (1)
-            0.0  // Valeur 0
+                return std::abs(x - xmin) < eps_geom && 
+                       std::abs(y - ymin) < eps_geom; 
+            }, 1, 0.0
         );
-
-        // C. Traction Imposée à DROITE (x = xmax) -> Ux = u_imposed
+        
         solver.addBoundaryCondition(
             [xmax, eps_geom](double x, double y) { 
                 return std::abs(x - xmax) < eps_geom; 
-            }, 
-            0,         // Direction X (0)
-            u_imposed  // Valeur imposée
+            }, 0, u_imposed
         );
 
-        cout << "    -> CL 1 : Blocage X sur bord gauche." << endl;
-        cout << "    -> CL 2 : Blocage Y sur coin bas-gauche." << endl;
-        cout << "    -> CL 3 : Traction X = " << u_imposed << " sur bord droit." << endl;
-
-
-        // -------------------------------------------------
-        // ETAPE 5 : RESOLUTION
-        // -------------------------------------------------
-        cout << "\n[5] Résolution du système K.U = F..." << endl;
-        
+        // [5] RESOLUTION
+        cout << "\n[5] Résolution..." << endl;
         solver.solve();
 
-
-        // -------------------------------------------------
-        // ETAPE 6 : RESULTATS SOMMAIRES
-        // -------------------------------------------------
-        cout << "\n[6] Résultats..." << endl;
+        // [6] GENERATION FICHIERS ANIMATION
+        cout << "\n[6] Génération des fichiers d'animation..." << endl;
+        
+        // Création du dossier de sortie
+        string outputDir = "data/resultats/data";
+        cout << "   Création du dossier: " << outputDir << endl;
+        
+        if(!createDirectory("data")) {
+            cerr << "   Attention: Impossible de créer 'data/'" << endl;
+        }
+        if(!createDirectory("data/resultats")) {
+            cerr << "   Attention: Impossible de créer 'data/resultats/'" << endl;
+        }
+        if(!createDirectory(outputDir)) {
+            cerr << "   Attention: Impossible de créer '" << outputDir << "'" << endl;
+        }
+        
         const Eigen::VectorXd& U = solver.getSolution();
         
-        double max_ux = -1e9;
-        double max_uy = -1e9;
+        int nb_frames = 50;
+        double amp_visuelle = 1.0;
+        
+        cout << "   Paramètres: " << nb_frames << " frames, amplification = " 
+             << amp_visuelle << endl;
+        
+        int success_count = 0;
+        for (int frame = 0; frame <= nb_frames; ++frame) {
+            string filename = outputDir + "/anim_" + to_string(frame) + ".txt";
+            ofstream out(filename);
+            
+            if (!out.is_open()) {
+                cerr << "   [ERREUR] Impossible de créer " << filename << endl;
+                continue;
+            }
 
-        // On parcourt le vecteur solution pour extraire le max par composante
-        for(int i=0; i < (int)mesh.vertices.size(); ++i) {
-            double ux = U(2*i);
-            double uy = U(2*i+1);
-            if(std::abs(ux) > max_ux) max_ux = std::abs(ux);
-            if(std::abs(uy) > max_uy) max_uy = std::abs(uy);
+            double t = (double)frame / nb_frames;
+
+            for (const auto& tri : mesh.triangles) {
+                int nodes[4] = {tri.v[0], tri.v[1], tri.v[2], tri.v[0]};
+                
+                for (int k = 0; k < 4; ++k) {
+                    int idx = nodes[k];
+                    
+                    // Vérification de sécurité
+                    if(idx < 0 || idx >= (int)mesh.vertices.size()) {
+                        cerr << "   [ERREUR] Indice invalide: " << idx << endl;
+                        continue;
+                    }
+                    
+                    double x_def = mesh.vertices[idx].x + U(2*idx) * t * amp_visuelle;
+                    double y_def = mesh.vertices[idx].y + U(2*idx+1) * t * amp_visuelle;
+                    
+                    out << x_def << " " << y_def << "\n";
+                }
+                out << "\n";
+            }
+            
+            out.close();
+            success_count++;
+            
+            if (frame % 10 == 0 || frame == nb_frames) {
+                cout << "   -> Frame " << frame << "/" << nb_frames 
+                     << " générée." << endl;
+            }
         }
-
-        cout << "    -> Déplacement Max |Ux| : " << max_ux << " (Cible: " << u_imposed << ")" << endl;
-        cout << "    -> Déplacement Max |Uy| : " << max_uy << " (Effet de Poisson)" << endl;
+        
+        cout << "   Total: " << success_count << " fichiers créés avec succès." << endl;
 
         cout << "\n========================================" << endl;
-        cout << "   CALCUL TERMINE AVEC SUCCES           " << endl;
+        cout << "   CALCUL TERMINE                       " << endl;
         cout << "========================================" << endl;
 
     } catch (const exception& e) {
