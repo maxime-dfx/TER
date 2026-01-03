@@ -1,14 +1,17 @@
 set terminal pngcairo size 1000,600 enhanced font 'Verdana,10'
+# Chemin relatif depuis la racine 'Code'
 set output 'data/resultats/graphique/champ_deplacement.png'
 
 set title "Carte du Déplacement (Magnitude)"
 set xlabel "X (mm)"
 set ylabel "Y (mm)"
 
-# --- LA CORRECTION EST ICI ---
+# --- CORRECTION APPLIQUÉE ---
 # 1. Active l'interpolation de grille (100x100 points, lissage qnorm 2)
-set dgrid3d 100,100,2
-# 2. Vue de dessus
+# Cela permet de transformer le nuage de points non-structuré en surface
+set dgrid3d 100,100
+
+# 2. Vue de dessus (Heatmap 2D)
 set view map
 set pm3d map
 # -----------------------------

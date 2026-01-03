@@ -3,6 +3,7 @@
 # Définition des dossiers
 DIR_FE = finite_elements
 DIR_IMG = traitement_image
+GNUPLOT_DIR = data/resultats/gnuplot
 
 # Les cibles qui ne sont pas des fichiers
 .PHONY: all clean fe img help
@@ -40,3 +41,10 @@ help:
 	@echo "  make fe     : Compile uniquement le solver éléments finis"
 	@echo "  make img    : Compile uniquement le traitement d'image"
 	@echo "  make clean  : Supprime tous les fichiers temporaires et exécutables"
+
+plot:
+	@echo "Génération des graphiques..."
+	gnuplot $(GNUPLOT_DIR)/Heatmap.gp
+	gnuplot $(GNUPLOT_DIR)/Poisson.gp
+	gnuplot $(GNUPLOT_DIR)/Young.gp
+	@echo "Graphiques générés dans data/resultats/graphique !"
