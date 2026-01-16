@@ -1,30 +1,28 @@
 EXEC = ../bin/traitement_img
 CXX = g++
 
-# --- CONFIGURATION OPENCV LOCALE ---
-OPENCV_ROOT = ../librairies/opencv_install
+# --- CONFIGURATION OPENCV LOCALE (LINUX) ---
+# On utilise HOME pour pointer vers ton dossier perso
+OPENCV_ROOT = $(HOME)/librairies/opencv_install
 
-# Chemin des includes (souvent dans include/opencv4)
+# Chemin des includes (headers)
 OPENCV_INC = -I$(OPENCV_ROOT)/include/opencv4
 
 # Chemin des librairies (libs)
-# Sous MinGW, c'est souvent dans x64/mingw/lib. Si cela échoue, essayez juste /lib
-OPENCV_LIB_DIR = -L$(OPENCV_ROOT)/x64/mingw/lib
+# Sous Linux, les fichiers compilés sont dans 'lib' (pas x64/mingw)
+OPENCV_LIB_DIR = -L$(OPENCV_ROOT)/lib64
 
-# Version du suffixe des fichiers .a (ex: libopencv_core4100.dll.a -> 4100)
-# Regardez dans le dossier lib pour confirmer ce numéro.
-OPENCV_VER = 4100
-
-# Liste des modules à lier
-OPENCV_LIBS = -lopencv_core$(OPENCV_VER) \
-              -lopencv_imgproc$(OPENCV_VER) \
-              -lopencv_highgui$(OPENCV_VER) \
-              -lopencv_imgcodecs$(OPENCV_VER)
+# Liste des modules à lier (Sans suffixe de version sous Linux)
+OPENCV_LIBS = -lopencv_core \
+              -lopencv_imgproc \
+              -lopencv_highgui \
+              -lopencv_imgcodecs
 
 # --- FIN CONFIGURATION ---
 
 CXXFLAGS = -Wall -Wextra -std=c++11 -Iinclude $(OPENCV_INC)
-LDFLAGS = $(OPENCV_LIB_DIR) $(OPENCV_LIBS)
+# Important : -Wl,-rpath inscrit le chemin des libs DANS l'exécutable
+LDFLAGS = $(OPENCV_LIB_DIR) $(OPENCV_LIBS) -Wl,-rpath,$(OPENCV_ROOT)/lib
 
 SRC = $(wildcard src/*.cpp)
 OBJ = $(SRC:src/%.cpp=obj/%.o)
@@ -40,4 +38,4 @@ obj/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj ../bin/traitement_img.exe
+	rm -rf obj $(EXEC)

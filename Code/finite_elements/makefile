@@ -1,11 +1,14 @@
 EXEC = ../bin/solver_fe
 CXX = g++
 
-# --- CHEMIN EIGEN CORRIGÉ ---
-# On remonte de 'finite_elements' vers 'Code' (..), puis vers 'TER' (..) pour trouver 'librairies'
-EIGEN_DIR = ../../librairies
+# --- CONFIGURATION LOCALE (LINUX) ---
+# On utilise HOME pour pointer directement vers ton dossier ~/librairies
+# On pointe vers le dossier 'eigen' spécifique
+EIGEN_DIR = $(HOME)/librairies/eigen
 
 # Flags
+# -I$(EIGEN_DIR) permet de trouver <Eigen/Sparse>
+# -fopenmp est conservé pour le calcul parallèle
 CXXFLAGS = -Wall -Wextra -std=c++17 -fopenmp -Iinclude -I$(EIGEN_DIR)
 
 SRC = $(wildcard src/*.cpp)
@@ -22,4 +25,4 @@ obj/%.o: src/%.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf obj ../bin/solver_fe.exe
+	rm -rf obj $(EXEC)

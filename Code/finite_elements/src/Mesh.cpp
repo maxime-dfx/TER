@@ -2,150 +2,69 @@
 #include <iostream>
 #include <fstream>
 #include <stdexcept>
-#include <string>
 #include <algorithm>
 
 using namespace std;
 
-Mesh::Mesh() {
-    // Constructeur par défaut
-}
-
 void Mesh::read(const string& filename) {
     ifstream file(filename);
-    if (!file.is_open()) {
-        throw runtime_error("Erreur : Impossible d'ouvrir le fichier " + filename);
-    }
+    if (!file.is_open()) throw runtime_error("Impossible d'ouvrir " + filename);
 
     string keyword;
     int dim = 2;
 
     while (file >> keyword) {
-        
-        // [1] DIMENSION
         if (keyword == "Dimension") {
             file >> dim;
-            if(dim != 2 && dim != 3) {
-                cerr << "[Attention] Dimension " << dim << " détectée, seule la 2D est supportée." << endl;
-            }
         }
-
-        // [2] VERTICES
         else if (keyword == "Vertices") {
-            int nbVertices;
-            file >> nbVertices;
-            
-            if(nbVertices <= 0) {
-                throw runtime_error("Nombre de sommets invalide: " + to_string(nbVertices));
-            }
-            
-            vertices.reserve(nbVertices);
-
-            for (int i = 0; i < nbVertices; ++i) {
-                double x, y, z_dummy;
-                int label;
-
-                if (dim == 3) {
-                    file >> x >> y >> z_dummy >> label;
-                } else {
-                    file >> x >> y >> label;
-                }
-                
-                if(file.fail()) {
-                    throw runtime_error("Erreur de lecture au sommet " + to_string(i+1));
-                }
-
-                vertices.push_back({x, y, label});
+            int nb; file >> nb;
+            vertices.reserve(nb);
+            for (int i = 0; i < nb; ++i) {
+                double x, y, z_dummy; int lbl;
+                if (dim == 3) file >> x >> y >> z_dummy >> lbl;
+                else          file >> x >> y >> lbl;
+                vertices.push_back({x, y, lbl});
             }
         }
-        
-        // [3] TRIANGLES
         else if (keyword == "Triangles") {
-            int nbTriangles;
-            file >> nbTriangles;
-            
-            if(nbTriangles <= 0) {
-                throw runtime_error("Nombre de triangles invalide: " + to_string(nbTriangles));
-            }
-            
-            triangles.reserve(nbTriangles);
-
-            for (int i = 0; i < nbTriangles; ++i) {
+            int nb; file >> nb;
+            triangles.reserve(nb);
+            for (int i = 0; i < nb; ++i) {
                 int n1, n2, n3, ref;
                 file >> n1 >> n2 >> n3 >> ref;
-                
-                if(file.fail()) {
-                    throw runtime_error("Erreur de lecture au triangle " + to_string(i+1));
-                }
-
-                // Conversion base-1 vers base-0
-                n1--; n2--; n3--;
-                
-                // Validation des indices
-                int maxIdx = (int)vertices.size();
-                if(n1 < 0 || n1 >= maxIdx || 
-                   n2 < 0 || n2 >= maxIdx || 
-                   n3 < 0 || n3 >= maxIdx) {
-                    throw runtime_error(
-                        "Triangle " + to_string(i+1) + " : indices hors limites [" +
-                        to_string(n1) + ", " + to_string(n2) + ", " + to_string(n3) + 
-                        "], max=" + to_string(maxIdx-1)
-                    );
-                }
-
-                Triangle tri;
-                tri.v[0] = n1;
-                tri.v[1] = n2;
-                tri.v[2] = n3;
-                tri.label = ref;
-                triangles.push_back(tri);
+                triangles.push_back({n1-1, n2-1, n3-1, ref}); // Indices 0-based
             }
         }
-        
-        // [4] FIN
-        else if (keyword == "End") {
-            break;
-        }
-        
-        // Ignorer les autres blocs (Edges, etc.)
+        else if (keyword == "End") break;
     }
     
-    file.close();
-    
-    // Validation finale
-    if(vertices.empty()) {
-        throw runtime_error("Aucun sommet lu dans le fichier!");
+    if(vertices.empty()) throw runtime_error("Maillage vide ou mal formé !");
+    cout << "[Mesh] " << vertices.size() << " noeuds, " << triangles.size() << " elements." << endl;
+}
+
+double Mesh::getTriangleArea(int i) const {
+    const Triangle& t = triangles[i];
+    const Vertex& p0 = vertices[t.v[0]];
+    const Vertex& p1 = vertices[t.v[1]];
+    const Vertex& p2 = vertices[t.v[2]];
+    return 0.5 * std::abs((p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y));
+}
+
+BoundingBox Mesh::getBounds() const {
+    BoundingBox bb = {1e9, -1e9, 1e9, -1e9, 0, 0};
+    for (const auto& v : vertices) {
+        if(v.x < bb.xmin) bb.xmin = v.x;
+        if(v.x > bb.xmax) bb.xmax = v.x;
+        if(v.y < bb.ymin) bb.ymin = v.y;
+        if(v.y > bb.ymax) bb.ymax = v.y;
     }
-    if(triangles.empty()) {
-        throw runtime_error("Aucun triangle lu dans le fichier!");
-    }
-    
-    cout << "[Mesh] Lecture terminée : " << vertices.size() << " sommets, " 
-         << triangles.size() << " triangles (Dimension: " << dim << ")." << endl;
+    bb.L = bb.xmax - bb.xmin;
+    bb.H = bb.ymax - bb.ymin;
+    return bb;
 }
 
 void Mesh::printStats() const {
-    cout << "=== Statistiques du Maillage ===" << endl;
-    cout << "Nombre de sommets   : " << vertices.size() << endl;
-    cout << "Nombre de triangles : " << triangles.size() << endl;
-    
-    if (!vertices.empty()) {
-        cout << "Premier sommet      : (" << vertices[0].x << ", " 
-             << vertices[0].y << "), label=" << vertices[0].label << endl;
-        cout << "Dernier sommet      : (" << vertices.back().x << ", " 
-             << vertices.back().y << "), label=" << vertices.back().label << endl;
-    }
-    
-    if (!triangles.empty()) {
-        // Statistiques sur les labels de triangles
-        int min_label = triangles[0].label;
-        int max_label = triangles[0].label;
-        for(const auto& tri : triangles) {
-            min_label = min(min_label, tri.label);
-            max_label = max(max_label, tri.label);
-        }
-        cout << "Labels triangles    : [" << min_label << ", " << max_label << "]" << endl;
-    }
-    
-    cout << "================================" << endl;
+    auto bb = getBounds();
+    cout << "   -> Dimensions : " << bb.L << " x " << bb.H << endl;
 }

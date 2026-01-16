@@ -3,33 +3,40 @@
 
 #include <vector>
 #include <string>
+#include <cmath>
 
-// Structure pour un point (Sommet)
+// Structure pour la Bounding Box (Boîte englobante)
+struct BoundingBox {
+    double xmin, xmax, ymin, ymax;
+    double L, H;
+};
+
 struct Vertex {
     double x, y;
-    int label; // Le "ref" ou "tag" (ex: 1=bord bas, 2=bord droit...)
+    int label; 
 };
 
-// Structure pour un élément (Triangle)
 struct Triangle {
-    int v[3];  // Les indices des 3 sommets dans le vecteur de sommets
-    int label; // Le "ref" (ex: 0=Matrice, 1=Fibre)
+    int v[3];  
+    int label; 
 };
 
-// La classe principale
 class Mesh {
 public:
     std::vector<Vertex> vertices;
     std::vector<Triangle> triangles;
 
-    // Constructeur
-    Mesh();
+    Mesh() = default;
 
-    // Méthode de lecture
     void read(const std::string& filename);
-
-    // Affichage des infos pour vérifier
     void printStats() const;
+
+    // --- NOUVELLES MÉTHODES ---
+    // Calcule l'aire d'un triangle spécifique (pour Solver & PostPro)
+    double getTriangleArea(int triangleIndex) const;
+    
+    // Calcule les dimensions totales du modèle
+    BoundingBox getBounds() const;
 };
 
 #endif
