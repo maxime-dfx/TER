@@ -1,0 +1,18 @@
+[io]
+mesh_file = "data/convergence/temp_mesh.mesh"
+output_dir = "data/convergence"
+output_vtk = "debug.vtk"
+
+[simulation]
+strain_target = 0.001
+plane_strain = true
+
+[materiaux.matrice]
+label = 101
+E = 3500.0
+nu = 0.35
+
+[materiaux.fibre]
+label = 102
+E = 280000.0
+nu = 0.2

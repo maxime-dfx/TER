@@ -1,0 +1,24 @@
+# === CONFIGURATION SIMULATION TER ===
+
+[io]
+mesh_file = "data/maillage/maillage_17216.mesh"
+output_dir = "data/resultats"
+output_vtk = "traction_resultat.vtk"
+
+[simulation]
+strain_target = 0.001  # 0.1% deformation
+plane_strain = true    # true = Déformation plane, false = Contrainte plane
+
+[materiaux]
+
+    # --- La Matrice (Epoxy) ---
+    [materiaux.matrice]
+    label = 101
+    E = 3500.0      # MPa
+    nu = 0.35
+
+    # --- La Fibre (Carbone) ---
+    [materiaux.fibre]
+    label = 102
+    E = 280000.0    # MPa
+    nu = 0.20
