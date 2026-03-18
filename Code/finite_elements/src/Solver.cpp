@@ -5,40 +5,18 @@
 using namespace std;
 using namespace Eigen;
 
-Solver::Solver(const Mesh& m, const MaterialManager& mat) : mesh(m), matMgr(mat) {
-    numDof = mesh.vertices.size() * 2;
+Solver::Solver(const Mesh& m, const MaterialManager& mat, bool planeStress) 
+    : mesh(m), matMgr(mat), isPlaneStress(planeStress) {
+    numDof = mesh.getVertices().size() * 2;
     F = VectorXd::Zero(numDof);
     U = VectorXd::Zero(numDof);
 }
-
 Matrix<double, 6, 6> Solver::computeElementStiffness(int tIdx) {
-    const Triangle& tri = mesh.triangles[tIdx];
+    const Triangle& tri = mesh.getTriangles()[tIdx];
+    Matrix3d D = matMgr.getHookeMatrix(tri.label, isPlaneStress); // Point 1.A conservé !
     
-    // 1. Physique (Direct Eigen)
-    Matrix3d D = matMgr.getHookeMatrix(tri.label, false);
-
-    // 2. Géométrie (Via Mesh)
-    double area = mesh.getTriangleArea(tIdx);
-    
-    // Matrice B
-    const Vertex& p0 = mesh.vertices[tri.v[0]];
-    const Vertex& p1 = mesh.vertices[tri.v[1]];
-    const Vertex& p2 = mesh.vertices[tri.v[2]];
-
-    double b[3] = {p1.y - p2.y, p2.y - p0.y, p0.y - p1.y};
-    double c[3] = {p2.x - p1.x, p0.x - p2.x, p1.x - p0.x};
-
-    Matrix<double, 3, 6> B = Matrix<double, 3, 6>::Zero();
-    for(int i=0; i<3; ++i) {
-        B(0, 2*i) = b[i]; B(1, 2*i+1) = c[i];
-        B(2, 2*i) = c[i]; B(2, 2*i+1) = b[i];
-    }
-    
-    // Vérification de l'orientation (DetJ)
-    double detJ = (p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y);
-    double sign = (detJ > 0) ? 1.0 : -1.0;
-    
-    B *= sign / (2.0 * area);
+    double area = 0.0;
+    Matrix<double, 3, 6> B = mesh.computeBMatrix(tIdx, area);
 
     return B.transpose() * D * B * area;
 }
@@ -47,7 +25,7 @@ void Solver::assemble() {
     cout << "   [Solver] Assemblage Parallele (" << omp_get_max_threads() << " threads)..." << endl;
     
     vector<Triplet<double>> triplets;
-    size_t est_size = mesh.triangles.size() * 36;
+    size_t est_size = mesh.getTriangles().size() * 36;
     triplets.reserve(est_size);
 
     #pragma omp parallel
@@ -56,9 +34,9 @@ void Solver::assemble() {
         local_triplets.reserve(est_size / omp_get_num_threads());
 
         #pragma omp for
-        for (int t = 0; t < (int)mesh.triangles.size(); ++t) {
+        for (int t = 0; t < (int)mesh.getTriangles().size(); ++t) {
             Matrix<double, 6, 6> Ke = computeElementStiffness(t);
-            const Triangle& tri = mesh.triangles[t];
+            const Triangle& tri = mesh.getTriangles()[t];
 
             int gdof[6];
             for(int k=0; k<3; ++k) {
@@ -84,24 +62,29 @@ void Solver::assemble() {
 void Solver::addBoundaryCondition(NodeSelector selector, int direction, double value) {
     boundaryConditions.emplace_back(selector, direction, value);
 }
+void Solver::addPeriodicCondition(int nodeSlave, int nodeMaster, int direction, double delta) {
+    periodicConditions.emplace_back(nodeSlave, nodeMaster, direction, delta);
+}
 
 void Solver::applyBoundaryConditions() {
-    if (boundaryConditions.empty()) throw runtime_error("Aucune CL définie !");
+    if (boundaryConditions.empty() && periodicConditions.empty()) 
+        throw runtime_error("Aucune CL definie !");
     
-    cout << "   [Solver] Application des CL (" << boundaryConditions.size() << ")..." << endl;
+    cout << "   [Solver] Application des CL (Standard: " << boundaryConditions.size() 
+         << ", Periodiques: " << periodicConditions.size() << ")..." << endl;
     
-    // Pénalité adaptative
     double max_diag = 0.0;
     for (int k=0; k<K_global.outerSize(); ++k)
         for (SparseMatrix<double>::InnerIterator it(K_global, k); it; ++it)
             if (it.row() == it.col()) max_diag = std::max(max_diag, std::abs(it.value()));
 
-    double penalty = max_diag * 1.0e12;
+    double penalty = max_diag * 1.0e8;
 
-    for (int i = 0; i < (int)mesh.vertices.size(); ++i) {
-        double x = mesh.vertices[i].x;
-        double y = mesh.vertices[i].y;
-
+    // --- 1. Conditions de Dirichlet Classiques (existantes) ---
+    const auto& vertices = mesh.getVertices();
+    for (int i = 0; i < (int)vertices.size(); ++i) {
+        double x = vertices[i].x;
+        double y = vertices[i].y;
         for (const auto& bc : boundaryConditions) {
             if (bc.selector(x, y)) {
                 int dof = 2 * i + bc.direction;
@@ -109,6 +92,23 @@ void Solver::applyBoundaryConditions() {
                 F(dof) += penalty * bc.value;
             }
         }
+    }
+
+    // --- 2. Conditions Périodiques (NOUVEAU) ---
+    // Résout U_slave - U_master = delta par pénalisation
+    for (const auto& pbc : periodicConditions) {
+        int dof_s = 2 * pbc.nodeSlave + pbc.direction;
+        int dof_m = 2 * pbc.nodeMaster + pbc.direction;
+
+        // Ajout dans la matrice de rigidité (couplage des deux DDL)
+        K_global.coeffRef(dof_s, dof_s) += penalty;
+        K_global.coeffRef(dof_m, dof_m) += penalty;
+        K_global.coeffRef(dof_s, dof_m) -= penalty;
+        K_global.coeffRef(dof_m, dof_s) -= penalty;
+
+        // Ajout dans le vecteur second membre
+        F(dof_s) += penalty * pbc.delta;
+        F(dof_m) -= penalty * pbc.delta;
     }
 }
 

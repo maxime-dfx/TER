@@ -33,7 +33,7 @@ void Mesh::read(const string& filename) {
             for (int i = 0; i < nb; ++i) {
                 int n1, n2, n3, ref;
                 file >> n1 >> n2 >> n3 >> ref;
-                triangles.push_back({n1-1, n2-1, n3-1, ref}); // Indices 0-based
+                triangles.push_back({n1-1, n2-1, n3-1, ref});
             }
         }
         else if (keyword == "End") break;
@@ -67,4 +67,29 @@ BoundingBox Mesh::getBounds() const {
 void Mesh::printStats() const {
     auto bb = getBounds();
     cout << "   -> Dimensions : " << bb.L << " x " << bb.H << endl;
+}
+
+Eigen::Matrix<double, 3, 6> Mesh::computeBMatrix(int triangleIndex, double& area) const {
+    const Triangle& tri = triangles[triangleIndex];
+    const Vertex& p0 = vertices[tri.v[0]];
+    const Vertex& p1 = vertices[tri.v[1]];
+    const Vertex& p2 = vertices[tri.v[2]];
+
+    // Calcul de l'aire locale au passage
+    area = 0.5 * std::abs((p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y));
+
+    double b[3] = {p1.y - p2.y, p2.y - p0.y, p0.y - p1.y};
+    double c[3] = {p2.x - p1.x, p0.x - p2.x, p1.x - p0.x};
+
+    Eigen::Matrix<double, 3, 6> B = Eigen::Matrix<double, 3, 6>::Zero();
+    for(int i=0; i<3; ++i) {
+        B(0, 2*i) = b[i]; B(1, 2*i+1) = c[i];
+        B(2, 2*i) = c[i]; B(2, 2*i+1) = b[i];
+    }
+    
+    double detJ = (p1.x - p0.x)*(p2.y - p0.y) - (p2.x - p0.x)*(p1.y - p0.y);
+    double sign = (detJ > 0) ? 1.0 : -1.0;
+    
+    B *= sign / (2.0 * area);
+    return B;
 }

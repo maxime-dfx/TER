@@ -3,7 +3,6 @@
 
 #include <string>
 #include <iostream>
-// Assurez-vous que c'est bien le toml.hpp de toml11
 #include "toml.hpp" 
 
 class DataFile {
@@ -18,6 +17,10 @@ public:
     // --- Simulation ---
     double getStrainTarget() const;
     bool   isPlaneStrain() const;
+    
+    // NOUVELLES METHODES INDISPENSABLES
+    std::string getLoadCase() const;
+    double getHalpinTsaiXi() const;
 
     // --- Matériaux : Matrice ---
     int    getMatriceLabel() const;
@@ -30,7 +33,6 @@ public:
     double getFibreNu() const;
 
 private:
-    // toml11 stocke tout le fichier dans un 'toml::value'
     toml::value m_config;
 };
 

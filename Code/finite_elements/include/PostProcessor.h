@@ -6,18 +6,17 @@
 #include <Eigen/Dense>
 #include <string>
 
-// Structure enrichie pour l'analyse fine
+// Structure enrichie pour l'analyse du tenseur
 struct DetailedResults {
-    // Propriétés Globales
     double E_eff;
     double nu_eff;
-    double Vf; // Taux de fibre calculé (Volume Fraction)
+    double G_eff;        // NOUVEAU : Pour stocker le module de cisaillement
+    double Vf; 
 
-    // Moyennes par phase (pour comprendre le transfert de charge)
-    double mean_sigma_f; // Contrainte moyenne dans la Fibre
-    double mean_sigma_m; // Contrainte moyenne dans la Matrice
-    double mean_eps_f;   // Déformation moyenne dans la Fibre
-    double mean_eps_m;   // Déformation moyenne dans la Matrice
+    double mean_sigma_f; 
+    double mean_sigma_m; 
+    double mean_eps_f;   
+    double mean_eps_m;   
 };
 
 class PostProcessor {
@@ -25,16 +24,15 @@ private:
     const Mesh& mesh;
     const MaterialManager& matMgr;
     const Eigen::VectorXd& U;
-
-    // Helper interne
-    double getTriangleArea(int tIdx) const;
+    
+    bool isPlaneStress; 
 
 public:
-    PostProcessor(const Mesh& m, const MaterialManager& mat, const Eigen::VectorXd& u);
+    PostProcessor(const Mesh& m, const MaterialManager& mat, const Eigen::VectorXd& u, bool planeStress);
 
-    // Nouvelle méthode de calcul plus complète
-    DetailedResults runAnalysis(double totalArea, double imposedStrain, double meshHeight, int labelFibre, int labelMatrice);
 
+    DetailedResults runAnalysis(double totalArea, double imposedStrain, const BoundingBox& bb, int labelFibre, int labelMatrice, const std::string& loadCase);
+    
     void exportToVTK(const std::string& filename) const;
     void exportToGnuplot(const std::string& filename) const;
 };

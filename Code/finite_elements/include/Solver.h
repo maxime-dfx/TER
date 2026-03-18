@@ -16,10 +16,14 @@ private:
     Eigen::VectorXd U;
 
     std::vector<BoundaryCondition> boundaryConditions;
+    std::vector<PeriodicCondition> periodicConditions; 
     int numDof;
+    
+    bool isPlaneStress; 
 
 public:
-    Solver(const Mesh& m, const MaterialManager& mat);
+    // NOUVEAU : Ajout du paramètre dans le constructeur
+    Solver(const Mesh& m, const MaterialManager& mat, bool planeStress);
 
     Eigen::Matrix<double, 6, 6> computeElementStiffness(int triangleIndex);
     
@@ -29,6 +33,7 @@ public:
     void solve(); 
 
     const Eigen::VectorXd& getSolution() const { return U; }
+    void addPeriodicCondition(int nodeSlave, int nodeMaster, int direction, double delta);
 };
 
 #endif
