@@ -76,6 +76,24 @@ void ManualSelector::updateDisplay() {
     imshow(m_windowName, m_imgDisplay);
 }
 
+
+void ManualSelector::updateDisplay_ell() {
+    m_imgDisplay = m_imgRaw.clone();
+    
+    // Dessiner toutes les fibres validées
+    for (const auto& f : m_fibres_ell) {
+        ellipse(m_imgDisplay, f.center, Size((int)f.ray_a,(int)f.ray_b),f.angle,0,360, Scalar(0, 255, 0), 2); // Vert
+        circle(m_imgDisplay, f.center, 2, Scalar(0, 0, 255), -1); // Point rouge
+    }
+
+    // Dessiner le centre en cours si on attend le rayon
+    if (m_isSelectingRadius) {
+        circle(m_imgDisplay, m_tempCenter, 2, Scalar(0, 0, 255), -1);
+    }
+
+    imshow(m_windowName, m_imgDisplay);
+}
+
 vector<Fibre> ManualSelector::run() {
     namedWindow(m_windowName, WINDOW_AUTOSIZE);
     // On passe 'this' pour que la fonction statique puisse accéder à l'objet
@@ -95,4 +113,26 @@ vector<Fibre> ManualSelector::run() {
     
     destroyWindow(m_windowName);
     return m_fibres;
+}
+
+
+vector<FibreEllipse> ManualSelector::run_ellipse() {
+    namedWindow(m_windowName, WINDOW_AUTOSIZE);
+    // On passe 'this' pour que la fonction statique puisse accéder à l'objet
+    setMouseCallback(m_windowName, mouseCallback, this);
+
+    cout << "=== MODE SELECTION ===" << endl;
+    cout << "[Clic Gauche] 1x Centre, 1x Bord" << endl;
+    cout << "[Clic Droit]  Annuler dernier" << endl;
+    cout << "[ESPACE]      Terminer et Sauvegarder" << endl;
+
+    updateDisplay();
+
+    while (true) {
+        char k = (char)waitKey(10);
+        if (k == ' ' || k == 27 || k == 's') break; // Espace, ESC ou 's'
+    }
+    
+    destroyWindow(m_windowName);
+    return m_fibres_ell;
 }

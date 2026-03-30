@@ -9,4 +9,10 @@ struct Fibre {
     double radius;      // Rayon
 };
 
+struct FibreEllipse {
+    cv::Point2f center;
+    double ray_a;
+    double ray_b;
+    float angle;
+};
 #endif

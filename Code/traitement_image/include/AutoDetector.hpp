@@ -13,6 +13,7 @@ public:
 
     // Lance la détection et retourne les fibres trouvées
     // showDebug : si true, ouvre une fenêtre pour valider visuellement
+    std::vector<FibreEllipse> run_ellipse(bool showDebug = true);
     std::vector<Fibre> run(bool showDebug = true);
 
     // Permet de modifier les paramètres sans recompiler la classe (Setters)
