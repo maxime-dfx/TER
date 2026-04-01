@@ -132,47 +132,55 @@ void AutoDetector::setHoughParams(double minDist, double p1, double p2, int minR
 vector<FibreEllipse> AutoDetector::run_ellipse(bool showDebug) {
     if (m_imgRaw.empty()) return {};
 
+    //D'ici a :
+    Mat binary , hsv;
+    cvtColor(m_imgRaw, hsv , COLOR_BGR2GRAY);
 
-    Mat gray, binary;
-    if (m_imgRaw.channels() == 3) cvtColor(m_imgRaw, gray, COLOR_BGR2GRAY);
-    else gray = m_imgRaw.clone();
+    cv::Scalar coul_min(80,10,39.5*2.55);
+    cv::Scalar coul_max(180,30,41*2.55);
 
-    // 1. Lissage important pour fusionner la texture interne des fibres
+    cv::inRange(hsv,coul_min,coul_max,binary);
+     // 1. Lissage important pour fusionner la texture interne des fibres
     // Augmentez le Sigma (le '3') si c'est encore trop bruité
-    GaussianBlur(gray, gray, Size(9, 9), 3);
+    GaussianBlur(binary, binary, Size(9, 9), 4);
 
     // 2. Utilisation de OTSU (calcule le seuil auto)
-    // On utilise THRESH_BINARY_INV car on veut que les fibres (sombres) deviennent BLANCHES
-    threshold(gray, binary, 0, 255, THRESH_BINARY | THRESH_OTSU);
+    threshold(binary, binary, 0, 255, THRESH_BINARY | THRESH_OTSU);
 
     // 3. Morphologie pour nettoyer
     // OPEN : enlève les petits points blancs isolés
     // CLOSE : bouche les trous dans les fibres
-    Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(7, 7));
+    Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(4, 4));
     morphologyEx(binary, binary, MORPH_OPEN, kernel);
     morphologyEx(binary, binary, MORPH_CLOSE, kernel);
+    //ici
+    imwrite("verifs/debug_inrange.png", binary);
 
-    // Diagnostic : vérifiez ce fichier !
-    imwrite("verifs/debug_otsu.png", binary);
+    // Ici c'est un traitement fonctionnel 'oetsu' mais on tente autre chose :
 
     // Mat gray, binary;
     // if (m_imgRaw.channels() == 3) cvtColor(m_imgRaw, gray, COLOR_BGR2GRAY);
     // else gray = m_imgRaw.clone();
 
-    // // 1. Prétraitement : Flou léger pour lisser le bruit sans détruire les bords
-    // GaussianBlur(gray, gray, Size(15, 15), 0);
-    // //medianBlur(gray, gray, 5);
+    // // 1. Lissage important pour fusionner la texture interne des fibres
+    // // Augmentez le Sigma (le '3') si c'est encore trop bruité
+    // GaussianBlur(gray, gray, Size(9, 9), 4);
 
-    // // 2. Binarisation adaptative (mieux que Canny pour des formes pleines)
-    // // Elle gère les variations de lumière sur l'image
-    // adaptiveThreshold(gray, binary, 255, ADAPTIVE_THRESH_GAUSSIAN_C, THRESH_BINARY_INV, 31, 4);
+    // // 2. Utilisation de OTSU (calcule le seuil auto)
+    // threshold(gray, binary, 0, 255, THRESH_BINARY | THRESH_OTSU);
 
-    // // 3. Morphologie : boucher les trous dans les cercles
-    // // Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
-    // // morphologyEx(binary, binary, MORPH_CLOSE, kernel); 
-
-    // Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(7, 7)); // Plus grand
+    // // 3. Morphologie pour nettoyer
+    // // OPEN : enlève les petits points blancs isolés
+    // // CLOSE : bouche les trous dans les fibres
+    // Mat kernel = getStructuringElement(MORPH_ELLIPSE, Size(4, 4));
+    // morphologyEx(binary, binary, MORPH_OPEN, kernel);
     // morphologyEx(binary, binary, MORPH_CLOSE, kernel);
+
+    // // Diagnostic : vérifiez ce fichier !
+    // imwrite("verifs/debug_otsu.png", binary);
+
+    //Jusque la
+
 
     // 4. Trouver les contours
     vector<vector<Point>> contours;
@@ -192,15 +200,35 @@ vector<FibreEllipse> AutoDetector::run_ellipse(bool showDebug) {
     // --------------------------
 
 
-
+    double min, max;
+    min = 2500000 ;
+    max = min;
     vector<FibreEllipse> detectedFibres;
     for (const auto& contour : contours) {
         // Filtrage plus souple : au moins 15 points pour définir une ellipse
-        if (contour.size() < 5) continue;
+        if (contour.size() < 50)
+        {
+            //cout<<"contour trop petit ==> skip"<<endl;
+            continue;
+        } 
 
         // Calcul de l'aire pour éliminer les poussières
         double area = contourArea(contour);
-        if (area < 50) continue; // À ajuster selon la taille réelle de vos fibres
+        
+        if (area < 23000 || area > 250000) // À ajuster selon la taille réelle de vos fibres
+        {
+            //cout<<"Pas assez d'aire ==> skip"<<endl;
+            continue; 
+        }
+        else if (area < min)
+        {
+            min = area;
+        }
+        else if (area > max)
+        {
+            max = area;
+        }
+        // cout<<"Area = "<<area<<endl;
 
         // Fit ellipse
         RotatedRect e = fitEllipse(contour);
@@ -208,7 +236,12 @@ vector<FibreEllipse> AutoDetector::run_ellipse(bool showDebug) {
         // Optionnel : Vérifier la "circularité" (ratio largeur/hauteur)
         // Pour éviter de détecter des lignes allongées qui ne sont pas des fibres
         float ratio = e.size.width / e.size.height;
-        if (ratio < 0.5 || ratio > 1.5) continue;
+        if (ratio < 0.2 || ratio > 5.0)
+        {
+            //cout<<"pas bon ratio ==> skip"<<endl;
+            continue;
+        } 
+        //if (ratio < 0.5 || ratio > 1.5) continue;
 
         FibreEllipse f;
         f.center = e.center;
@@ -216,9 +249,9 @@ vector<FibreEllipse> AutoDetector::run_ellipse(bool showDebug) {
         f.ray_b = (double)e.size.height / 2.0;
         f.angle = (double)e.angle;
         detectedFibres.push_back(f);
+        //cout<<"Ajout d'une fibre"<<endl;
     }
-
-    // ... (Reste de votre code pour le dessin et le retour)
+    cout<<"max : "<<max<<" et min : "<<min<<endl;
     return detectedFibres;
 }
 

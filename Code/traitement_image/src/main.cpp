@@ -73,10 +73,23 @@ int main(int argc, char** argv) {
     }
 
     // Sécurité : Si aucune fibre trouvée
-    if (fibres.empty()) {
-        cout << "Aucune fibre trouvee. Arrêt." << endl;
-        return 0;
-    }
+    if (choix2 == 'e' || choix2 == 'E')
+        {
+            if (fibres_ell.empty())
+            {
+                cout <<"Aucune fibre elliptique trouvee . Arrêt"<<endl;
+                return 0;
+            }
+        }
+        else
+        {
+            if (fibres.empty())
+            {
+                cout << "Aucune fibre circulaire trouvee. Arrêt." << endl;
+                return 0;
+            }
+        }
+    
 
     // Chargement de l'image originale
     cv::Mat img = cv::imread(imgPath);
@@ -85,7 +98,7 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    cout<<"Debut etape 3"<<endl;
+    //cout<<"Debut etape 3"<<endl;
     // ---------------------------------------------------------
     // ETAPE 3 : Création de l'image de contrôle (Overlay)
     // ---------------------------------------------------------
