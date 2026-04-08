@@ -155,7 +155,28 @@ int main(int argc, char** argv) {
     // ---------------------------------------------------------
     GeoExporter exporter(img.cols, img.rows, 20.0);
 
-    if (exporter.save(geoPath, fibres)) {
+    if (exporter.save(geoPath, fibres) && (choix2 == 'C' || choix2 == 'c')) {
+        cout << "[ETAPE 1] Géométrie générée : " << geoPath << endl;
+
+        // ---------------------------------------------------------
+        // ETAPE 5 : Conversion automatique en .mesh via Gmsh
+        // ---------------------------------------------------------
+        cout << "[ETAPE 2] Maillage en cours (Conversion .geo -> .mesh)..." << endl;
+        
+        string meshPath = "data/maillage/maillage.mesh";
+        string cmd = "gmsh " + geoPath + " -2 -format mesh -o " + meshPath + " -v 2";
+        
+        int result = system(cmd.c_str());
+
+        if (result == 0) {
+            cout << "SUCCES ! Fichier final prêt : " << meshPath << endl;
+        } else {
+            cerr << "ERREUR : Gmsh n'a pas pu générer le maillage." << endl;
+        }
+        cout << "-----------------------------------------" << endl;
+    }
+
+    if (exporter.save_ell(geoPath, fibres_ell)) {
         cout << "[ETAPE 1] Géométrie générée : " << geoPath << endl;
 
         // ---------------------------------------------------------

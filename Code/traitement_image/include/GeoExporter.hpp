@@ -12,6 +12,7 @@ public:
 
     // Sauvegarde le fichier .geo
     bool save(const std::string& filename, const std::vector<Fibre>& fibres);
+    bool save_ell(const std::string& filename, const std::vector<FibreEllipse>& fibres);
 
 private:
     int m_width;

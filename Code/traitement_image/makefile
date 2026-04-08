@@ -10,7 +10,7 @@ OPENCV_INC = -I$(OPENCV_ROOT)/include/opencv4
 
 # Chemin des librairies (libs)
 # Sous Linux, les fichiers compilés sont dans 'lib' (pas x64/mingw)
-OPENCV_LIB_DIR = -L$(OPENCV_ROOT)/lib64
+OPENCV_LIB_DIR = -L$(OPENCV_ROOT)/lib
 
 # Liste des modules à lier (Sans suffixe de version sous Linux)
 OPENCV_LIBS = -lopencv_core \
