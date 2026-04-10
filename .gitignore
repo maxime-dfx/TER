@@ -1,0 +1,26 @@
+# --- Exécutables et Objets ---
+bin/
+obj/
+*.o
+*.exe
+
+# --- Python ---
+env_ter/
+__pycache__/
+*.pyc
+
+# --- Données de calcul (Lourd et inutile sur Git) ---
+data/outputs/
+data/maillage/
+data/etude_*/
+data/stats_*/
+data/validation_suite/
+data/convergence/
+*.vtk
+*.mesh
+*.toml
+*.csv
+
+# --- Divers ---
+.DS_Store
+.vscode/
