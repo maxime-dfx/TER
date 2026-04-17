@@ -1,26 +1,62 @@
-# --- Exécutables et Objets ---
-bin/
-obj/
+# ==============================================================================
+# 1. ARTEFACTS DE COMPILATION C++
+# ==============================================================================
+# On ne versionne JAMAIS ce qui est généré par le compilateur
 *.o
+*.obj
 *.exe
+*.out
+*.dll
+*.so
+*.a
 
-# --- Python ---
-env_ter/
+# Dossiers de build spécifiques à ton architecture
+core/bin/
+core/finite_elements/obj/
+core/traitement_image/obj/
+
+# ==============================================================================
+# 2. ENVIRONNEMENT PYTHON
+# ==============================================================================
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.so
 
-# --- Données de calcul (Lourd et inutile sur Git) ---
-data/outputs/
-data/maillage/
-data/etude_*/
-data/stats_*/
-data/validation_suite/
-data/convergence/
+# Environnements virtuels (si tu utilises pip/conda localement)
+.env/
+.venv/
+env/
+venv/
+ENV/
+
+# ==============================================================================
+# 3. MÉCANIQUE NUMÉRIQUE & OUTPUTS (GMSH / PARAVIEW)
+# ==============================================================================
+# Les résultats de simulation ne doivent pas polluer le dépôt. 
+# Seuls les scripts permettant de les reproduire comptent.
 *.vtk
-*.mesh
-*.toml
-*.csv
+*.vtu
+*.pvd
 
-# --- Divers ---
-.DS_Store
+# Ignorer les répertoires de sortie de ton solveur
+data/outputs/
+workspace/
+
+# Ignorer les maillages générés dynamiquement par tes scripts
+# (Note : On garde data/raw/geo/maillage.geo car c'est un code source, 
+# mais on ignore les .mesh créés à la volée s'ils sont lourds)
+*.msh
+workspace/**/*.mesh
+
+# Ignorer les graphiques générés (à moins que tu ne rédiges ton rapport en LaTeX via Git)
+results/*.png
+
+# ==============================================================================
+# 4. SYSTÈME D'EXPLOITATION & IDE
+# ==============================================================================
 .vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

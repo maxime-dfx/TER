@@ -13,12 +13,13 @@ enum class LoadCase {
     TensionY,
     Shear,
     Thermal,
-    ThermoMechanical
+    ThermoMechanical,
+    LongitudinalShear // NOUVEAU : Cas de charge pour le cisaillement anti-plan (calcul de G12)
 };
 
 class HomogenizationManager {
 private:
-    SimulationContext ctx; // 3. CONTEXTE : Regroupement des dépendances
+    SimulationContext ctx; 
     bool isPlaneStress;
     double strain;
     double deltaT;
@@ -36,6 +37,9 @@ public:
     DetailedResults runMechanicalCase(LoadCase load_case);
     DetailedResults runThermalCase();
     DetailedResults runThermoMechanicalCase(LoadCase load_case);
+    
+    // NOUVEAU : Exécute le cas anti-plan et renvoie directement le module G12 effectif
+    double runLongitudinalShearCase(); 
 
     Eigen::Matrix3d computeEffectiveStiffness(double E1, double E2, double G12, double nu12, double nu21) const;
 };

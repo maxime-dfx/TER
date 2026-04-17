@@ -14,7 +14,6 @@ struct DetailedResults {
     double Vf; 
     double alpha_x;
     double alpha_y;
-    // NOUVEAU : Pour stocker les contraintes macroscopiques moyennes
     double macro_sig_xx; 
     double macro_sig_yy; 
     double macro_tau_xy; 
@@ -23,8 +22,6 @@ struct DetailedResults {
     double mean_sigma_m; 
     double mean_eps_f;   
     double mean_eps_m;  
-    
-
 };
 
 class PostProcessor {
@@ -35,13 +32,21 @@ private:
     
     bool isPlaneStress; 
     double deltaT; 
+    bool isAntiPlane; 
+    std::vector<double> damageState;
+    std::vector<double> cached_Sxx, cached_Syy, cached_Txy, cached_FI;
 
 public:
-    PostProcessor(const Mesh& m, const MaterialManager& mat, const Eigen::VectorXd& u, bool planeStress, double dT = 0.0);
+    PostProcessor(const Mesh& m, const MaterialManager& mat, const Eigen::VectorXd& u, bool planeStress, double dT = 0.0, bool isAntiPlane = false);
 
     DetailedResults runAnalysis(double totalArea, double imposedStrain, const BoundingBox& bb, int labelFibre, int labelMatrice, const std::string& loadCase);
     
     void exportToVTK(const std::string& filename) const;
+    void setDamageState(const std::vector<double>& damage) { damageState = damage; }
+    void setStressState(const std::vector<double>& sxx, const std::vector<double>& syy, const std::vector<double>& txy) {
+        cached_Sxx = sxx; cached_Syy = syy; cached_Txy = txy;
+    }
+    void setFailureIndex(const std::vector<double>& fi) { cached_FI = fi; }
 };
 
 #endif

@@ -1,0 +1,47 @@
+# ==============================================================================
+#                 CONFIGURATION MANUELLE DU SOLVEUR (input/input.toml)
+# ==============================================================================
+
+[io]
+# Chemin relatif par rapport à la racine du projet
+mesh_file = "data/raw/geo/maillage_17216.mesh" 
+output_dir = "data/outputs/thermique"
+output_vtk = "simulation_manuelle.vtk"
+
+[simulation]
+strain_target  = 0.001    # 0.1% de déformation
+plane_strain   = true      # Déformations planes (Standard 2D)
+halpin_tsai_xi = 2.0       # Facteur de forme fibres circulaires
+delta_T        = -250.0    # Refroidissement de 150°C
+load_steps = 20  # Nombre d'incréments pour la boucle PDA non-linéaire
+
+# ==============================================================================
+#                          PROPRIÉTÉS MATÉRIAUX (2A TER)
+# ==============================================================================
+
+[materiaux.matrice]
+label = 1
+E = 3500.0
+nu = 0.35
+alpha = 60e-6
+Xt = 80.0
+Xc = 150.0
+GIc = 150.0      # Énergie de fracture de l'époxy (en J/m^2)
+
+[materiaux.fibre]
+label = 2
+E = 230000.0
+nu = 0.20
+alpha = -1e-6
+Xt = 3000.0
+Xc = 2000.0
+GIc = 1e9        # Valeur quasi-infinie : on empêche la rupture de la fibre
+
+[materiaux.interphase]
+label = 3
+E = 2000.0     
+nu = 0.38
+alpha = 70e-6
+Xt = 40.0      
+Xc = 100.0
+GIc = 100.0      # Plus faible que la matrice pour favoriser la décohésion

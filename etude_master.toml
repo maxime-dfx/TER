@@ -1,0 +1,43 @@
+[projet]
+nom_etude = "Fibre_Carbone_Epoxy_Vf58"
+dossier_sortie = "workspace"
+
+[geometrie]
+taille_ver_transverse = 20.0
+rayon_fibre = 3.5
+epaisseur_interphase = 0.5
+fraction_volumique = 0.58
+
+[plan_experiences]
+generer_maillage_transverse = true
+generer_maillage_longitudinal = true
+run_mecanique = true
+run_thermique = false
+
+[simulation]
+nb_echantillons = 20
+delta_T = -100.0
+
+[materiaux.matrice]
+label = 1
+E = 3500.0
+nu = 0.35
+alpha = 6e-5
+Xt = 80.0
+Xc = 150.0
+
+[materiaux.fibre]
+label = 2
+E = 280000.0
+nu = 0.2
+alpha = -1e-6
+Xt = 3000.0
+Xc = 2000.0
+
+[materiaux.interphase]
+label = 3
+E = 2000.0
+nu = 0.38
+alpha = 7e-5
+Xt = 40.0
+Xc = 100.0
