@@ -1,0 +1,79 @@
+[projet]
+nom_etude = "etude_expert_composite"
+dossier_sortie = "workspace"
+
+[io]
+# --- CONFIGURATION DU MAILLAGE ---
+# Si true, le solveur utilise le maillage manuel spécifié.
+utiliser_maillage_manuel = false
+chemin_maillage_manuel = "data/mesh_images/maillage_17216.mesh"
+
+# --- CONFIGURATION IMAGE ---
+# Si true, l'orchestrateur lance le sélecteur manuel sur l'image.
+utiliser_traitement_image = false
+# Utilisation de l'image x100 identifiée
+chemin_image_microscope = "data/microscope_images/loin_2_x100_0.03um_80ms_x100_00.png"
+nom_fichier_csv = "fibres_reelles.csv"
+
+[plan_experiences]
+# On active le transverse pour traiter les clics de l'image
+generer_maillage_transverse = true
+generer_maillage_longitudinal = false
+run_mecanique = true
+
+[geometrie]
+# Résolution extraite du nom de fichier : x100 -> 0.03 um/pixel
+resolution_pixel_micron = 0.03
+# Taille du domaine (ajustée pour englober tes clics en pixels)
+taille_ver_transverse = 45.0
+taille_ver_longitudinal = 100.0
+# --- CONTRÔLE DU MAILLAGE ---
+# 1.0 = Maillage rapide/grossier (pour tester)
+# 2.0 = Maillage fin
+# 4.0 = Maillage très fin (Attention au temps de calcul !)
+facteur_finesse = 10.0
+
+# Paramètres par défaut (utilisés si le CSV est vide ou absent)
+fraction_volumique = 0.58
+rayon_fibre = 3.5
+epaisseur_interphase = 0.5
+
+[simulation]
+plane_strain = true        # Déformation plane
+strain_target = 0.02       # Déformation maximale (2%)
+load_steps = 20            # Nombre de pas de temps
+delta_T = 0.0              # Chargement thermique
+halpin_tsai_xi = 2.0       # Paramètre de forme analytique
+
+[analyses]
+calculer_rigidite_elastique = true
+calculer_thermique = false
+calculer_pda = false
+pda_load_case = "traction_y"
+
+[materiaux.matrice]
+label = 1
+E = 3500.0
+nu = 0.35
+alpha = 60e-6
+Xt = 80.0
+Xc = 150.0
+GIc = 150.0
+
+[materiaux.fibre]
+label = 2
+E = 280000.0
+nu = 0.2
+alpha = -1e-6
+Xt = 3000.0
+Xc = 2000.0
+GIc = 1e9
+
+[materiaux.interphase]
+label = 3
+E = 2000.0
+nu = 0.38
+alpha = 70e-6
+Xt = 40.0
+Xc = 100.0
+GIc = 100.0

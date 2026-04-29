@@ -1,0 +1,66 @@
+[projet]
+nom_etude = "etude_expert_composite"
+dossier_sortie = "workspace"
+
+[io]
+utiliser_maillage_manuel = false
+chemin_maillage_manuel = "data/mesh_images/maillage_17216.mesh"
+utiliser_traitement_image = false
+chemin_image_microscope = "data/microscope_images/loin_2_x100_0.03um_80ms_x100_00.png"
+nom_fichier_csv = "fibres_reelles.csv"
+mesh_file = "C:/Users/amorvan/Documents/Cours/2A/Projet/workspace/etude_expert_composite/transverse/maillages/ver_transverse.mesh"
+output_dir = "C:/Users/amorvan/Documents/Cours/2A/Projet/workspace/etude_expert_composite/transverse/resultats/thermique"
+
+[plan_experiences]
+generer_maillage_transverse = true
+generer_maillage_longitudinal = false
+run_mecanique = true
+
+[geometrie]
+resolution_pixel_micron = 0.03
+taille_ver_transverse = 45.0
+taille_ver_longitudinal = 100.0
+facteur_finesse = 10.0
+fraction_volumique = 0.58
+rayon_fibre = 3.5
+epaisseur_interphase = 0.5
+
+[simulation]
+plane_strain = true
+strain_target = 0.02
+load_steps = 20
+delta_T = 0.0
+halpin_tsai_xi = 2.0
+
+[analyses]
+calculer_rigidite_elastique = false
+calculer_thermique = true
+calculer_pda = false
+pda_load_case = "traction_y"
+
+[materiaux.matrice]
+label = 1
+E = 3500.0
+nu = 0.35
+alpha = 6e-5
+Xt = 80.0
+Xc = 150.0
+GIc = 150.0
+
+[materiaux.fibre]
+label = 2
+E = 280000.0
+nu = 0.2
+alpha = -1e-6
+Xt = 3000.0
+Xc = 2000.0
+GIc = 1000000000.0
+
+[materiaux.interphase]
+label = 3
+E = 2000.0
+nu = 0.38
+alpha = 7e-5
+Xt = 40.0
+Xc = 100.0
+GIc = 100.0
